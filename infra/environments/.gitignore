@@ -1,0 +1,10 @@
+# Ignore environment files with secrets
+# Uncomment if your .tfvars files contain sensitive data
+# *.tfvars
+
+# Ignore backup files
+*.backup
+*.bak
+
+# Ignore encrypted files
+*.encrypted

@@ -1,0 +1,33 @@
+import { APIGatewayProxyResultV2 } from 'aws-lambda';
+import { UserRepository } from '../repositories/UserRepository';
+
+const tableName = process.env.TABLE_NAME || '';
+const region = process.env.AWS_REGION || 'eu-central-1';
+const userRepo = new UserRepository(tableName, region);
+
+/**
+ * GET /users/{userId}/purchases
+ * Get user's purchase history
+ */
+export async function getUserPurchases(
+  userId: string,
+  options: { page?: string; limit?: string } = {}
+): Promise<APIGatewayProxyResultV2> {
+  try {
+    const result = await userRepo.getUserPurchases(userId, options);
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify(result),
+    };
+  } catch (error) {
+    console.error('Error getting user purchases:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: 'Internal Server Error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      }),
+    };
+  }
+}

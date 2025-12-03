@@ -1,0 +1,171 @@
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { DynamoDBRepository } from '../repositories/DynamoDBRepository';
+import { AccessValidator } from '../services/AccessValidator';
+import { SignedUrlGenerator } from '../services/SignedUrlGenerator';
+import { AccessRequest, AccessResponse, ErrorResponse, Intent, Config } from '../types';
+
+// Load configuration from environment variables
+const config: Config = {
+  tableName: process.env.TABLE_NAME!,
+  cloudfrontDomain: process.env.CLOUDFRONT_DOMAIN!,
+  cloudfrontKeyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
+  cloudfrontPrivateKeySecretArn: process.env.CLOUDFRONT_PRIVATE_KEY_SECRET_ARN!,
+  nodeEnv: process.env.NODE_ENV || 'production'
+};
+
+// Initialize services (reuse across invocations)
+const repository = new DynamoDBRepository(config.tableName);
+const validator = new AccessValidator(repository);
+const urlGenerator = new SignedUrlGenerator(
+  config.cloudfrontDomain,
+  config.cloudfrontKeyPairId,
+  config.cloudfrontPrivateKeySecretArn
+);
+
+/**
+ * Lambda handler for content access control
+ * Validates user access and generates signed CloudFront URLs
+ */
+export const handler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  console.log('Received event:', JSON.stringify(event, null, 2));
+
+  try {
+    // Parse and validate request body
+    const request = parseRequest(event);
+    
+    // Validate access
+    const validationResult = await validator.validateAccess(
+      request.user_id,
+      request.product_id,
+      request.intent
+    );
+
+    if (!validationResult.allowed) {
+      return errorResponse(403, 'AccessDenied', validationResult.errorMessage || 'Access denied');
+    }
+
+    // If download intent, decrement counter
+    if (request.intent === Intent.DOWNLOAD && validationResult.accessType === 'PURCHASE') {
+      try {
+        await repository.decrementDownloads(request.user_id, request.product_id);
+      } catch (error: any) {
+        if (error.message === 'Download limit reached') {
+          return errorResponse(403, 'DownloadLimitReached', 'Download limit reached');
+        }
+        throw error;
+      }
+    }
+
+    // Generate signed URL
+    const signedUrl = await urlGenerator.generateSignedUrl({
+      s3Key: validationResult.s3Key!,
+      intent: request.intent,
+      filename: validationResult.filename!,
+      expirationMinutes: 15
+    });
+
+    // Calculate expiration timestamp
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+
+    // Build success response
+    const response: AccessResponse = {
+      url: signedUrl,
+      expires_at: expiresAt.toISOString(),
+      access_type: validationResult.accessType!,
+      ...(validationResult.downloadsRemaining !== undefined && {
+        downloads_remaining: validationResult.downloadsRemaining
+      })
+    };
+
+    return successResponse(response);
+
+  } catch (error: any) {
+    console.error('Error processing request:', error);
+    
+    // Check if it's a validation error (400)
+    if (error.message?.includes('Missing required parameter') || 
+        error.message?.includes('Invalid intent') ||
+        error.message?.includes('Invalid JSON')) {
+      return errorResponse(400, 'InvalidRequest', error.message);
+    }
+
+    // Internal server error (500)
+    return errorResponse(500, 'InternalServerError', 'An error occurred processing your request');
+  }
+};
+
+/**
+ * Parse and validate request from API Gateway event
+ */
+function parseRequest(event: APIGatewayProxyEvent): AccessRequest {
+  if (!event.body) {
+    throw new Error('Missing required parameter: body');
+  }
+
+  let body: any;
+  try {
+    body = JSON.parse(event.body);
+  } catch (error) {
+    throw new Error('Invalid JSON in request body');
+  }
+
+  // Validate required parameters
+  if (!body.product_id) {
+    throw new Error('Missing required parameter: product_id');
+  }
+
+  if (!body.user_id) {
+    throw new Error('Missing required parameter: user_id');
+  }
+
+  if (!body.intent) {
+    throw new Error('Missing required parameter: intent');
+  }
+
+  // Validate intent value
+  if (body.intent !== 'STREAM' && body.intent !== 'DOWNLOAD') {
+    throw new Error('Invalid intent: must be STREAM or DOWNLOAD');
+  }
+
+  return {
+    product_id: body.product_id,
+    user_id: body.user_id,
+    intent: body.intent as Intent
+  };
+}
+
+/**
+ * Build success response
+ */
+function successResponse(data: AccessResponse): APIGatewayProxyResult {
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*' // Configure appropriately for production
+    },
+    body: JSON.stringify(data)
+  };
+}
+
+/**
+ * Build error response
+ */
+function errorResponse(statusCode: number, error: string, message: string): APIGatewayProxyResult {
+  const errorBody: ErrorResponse = {
+    error,
+    message
+  };
+
+  return {
+    statusCode,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*' // Configure appropriately for production
+    },
+    body: JSON.stringify(errorBody)
+  };
+}

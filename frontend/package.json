@@ -1,0 +1,28 @@
+{
+  "name": "kakraba-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kakraba frontend monorepo",
+  "workspaces": [
+    "packages/*",
+    "landing-page",
+    "creator-portal",
+    "fan-portal"
+  ],
+  "scripts": {
+    "dev:landing": "pnpm --filter landing-page dev",
+    "dev:creator": "pnpm --filter creator-portal dev",
+    "dev:fan": "pnpm --filter fan-portal dev",
+    "build:landing": "pnpm --filter landing-page build",
+    "build:creator": "pnpm --filter creator-portal build",
+    "build:fan": "pnpm --filter fan-portal build",
+    "build:all": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "type-check": "pnpm -r type-check"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  }
+}

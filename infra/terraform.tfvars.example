@@ -1,0 +1,17 @@
+# AWS Configuration
+aws_region = "us-east-1"
+
+# Project Configuration
+project_name = "kakraba"
+environment  = "dev"
+
+# Cognito Configuration (replace with your actual Cognito User Pool details)
+cognito_user_pool_id         = "us-east-1_XXXXXXXXX"
+cognito_user_pool_client_ids = ["your-client-id-here"]
+
+# Lambda Configuration
+lambda_package_path = "../app/dist/lambda.zip"
+
+# CloudFront Private Key (optional - leave empty to generate new key pair)
+# If you have an existing CloudFront private key, paste it here in PEM format
+cloudfront_private_key_pem = ""

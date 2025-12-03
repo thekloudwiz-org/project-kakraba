@@ -1,0 +1,29 @@
+{
+  "name": "product-management-service",
+  "version": "1.0.0",
+  "description": "Product management service for Kakraba platform",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint . --ext .ts",
+    "package": "npm run build && cd dist && zip -r ../product-management.zip ."
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.400.0",
+    "@aws-sdk/lib-dynamodb": "^3.400.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.119",
+    "@types/jest": "^29.5.3",
+    "@types/node": "^20.4.2",
+    "@types/uuid": "^9.0.2",
+    "eslint": "^8.45.0",
+    "fast-check": "^3.12.0",
+    "jest": "^29.6.1",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.1.6"
+  }
+}
