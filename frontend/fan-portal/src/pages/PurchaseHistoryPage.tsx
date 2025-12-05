@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api, Spinner, Badge } from '@kakraba/shared';
+import { api, Spinner, Badge, type Transaction, type PaginatedResponse } from '@kakraba/shared';
 
 type FilterType = 'all' | 'content' | 'product' | 'subscription';
 
@@ -8,15 +8,14 @@ export default function PurchaseHistoryPage() {
   const [filter, setFilter] = useState<FilterType>('all');
   const [page, setPage] = useState(1);
 
-  const { data: purchases, isLoading } = useQuery({
+  const { data: purchases, isLoading } = useQuery<PaginatedResponse<Transaction> & { totalPages: number }>({
     queryKey: ['purchase-history', filter, page],
     queryFn: async () => {
-      const result = await api.purchase.getPurchaseHistory({
+      return await api.purchase.getPurchaseHistory({
         type: filter === 'all' ? undefined : filter,
         page,
         limit: 20,
       });
-      return result as { items: any[]; totalPages: number };
     },
   });
 
@@ -88,7 +87,7 @@ export default function PurchaseHistoryPage() {
           </div>
         ) : purchases && purchases.items.length > 0 ? (
           <div className="space-y-4">
-            {purchases.items.map((purchase: any) => (
+            {purchases.items.map((purchase) => (
               <div
                 key={purchase.transactionId}
                 className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"

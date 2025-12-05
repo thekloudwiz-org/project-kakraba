@@ -54,8 +54,9 @@ export default function RegisterPage() {
       navigate('/login', { 
         state: { message: 'Registration successful! Please check your email to verify your account.' }
       });
-    } catch (err: any) {
-      setError(err.message || 'Failed to create account. Please try again.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to create account. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }

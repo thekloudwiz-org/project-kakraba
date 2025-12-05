@@ -27,9 +27,10 @@ export default function PasswordResetForm() {
     try {
       await resetPassword(data.email);
       setIsSuccess(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to send reset email';
       setError('root', {
-        message: error.message || 'Failed to send reset email',
+        message,
       });
     }
   };

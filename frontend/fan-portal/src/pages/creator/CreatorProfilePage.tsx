@@ -1,34 +1,31 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { api, Button, Badge, Spinner } from '@kakraba/shared';
+import { api, Button, Badge, Spinner, type User, type Product, type Content } from '@kakraba/shared';
 import ProductCard from '../../components/discovery/ProductCard';
 
 export default function CreatorProfilePage() {
   const { userId } = useParams<{ userId: string }>();
 
-  const { data: creator, isLoading: creatorLoading } = useQuery({
+  const { data: creator, isLoading: creatorLoading } = useQuery<User>({
     queryKey: ['creator', userId],
     queryFn: async () => {
-      const result = await api.creators.getCreatorProfile(userId!);
-      return result as any;
+      return await api.creators.getCreatorProfile(userId!);
     },
     enabled: !!userId,
   });
 
-  const { data: creatorContent, isLoading: contentLoading } = useQuery({
+  const { data: creatorContent, isLoading: contentLoading } = useQuery<Content[]>({
     queryKey: ['creator-content', userId],
     queryFn: async () => {
-      const result = await api.creators.getCreatorContent(userId!);
-      return result as any[];
+      return await api.creators.getCreatorContent(userId!);
     },
     enabled: !!userId,
   });
 
-  const { data: creatorProducts, isLoading: productsLoading } = useQuery({
+  const { data: creatorProducts, isLoading: productsLoading } = useQuery<Product[]>({
     queryKey: ['creator-products', userId],
     queryFn: async () => {
-      const result = await api.creators.getCreatorProducts(userId!);
-      return result as any[];
+      return await api.creators.getCreatorProducts(userId!);
     },
     enabled: !!userId,
   });
@@ -140,7 +137,7 @@ export default function CreatorProfilePage() {
             </div>
           ) : creatorProducts && creatorProducts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {creatorProducts.map((product: any) => (
+              {creatorProducts.map((product) => (
                 <ProductCard key={product.productId} product={product} />
               ))}
             </div>
@@ -160,7 +157,7 @@ export default function CreatorProfilePage() {
             </div>
           ) : creatorContent && creatorContent.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {creatorContent.map((content: any) => (
+              {creatorContent.map((content) => (
                 <ProductCard key={content.contentId} product={content} />
               ))}
             </div>

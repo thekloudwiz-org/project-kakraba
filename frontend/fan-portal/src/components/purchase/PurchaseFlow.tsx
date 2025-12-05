@@ -6,6 +6,35 @@ import PurchaseConfirmation from './PurchaseConfirmation';
 
 type Step = 'details' | 'payment' | 'confirmation';
 
+interface PaymentData {
+  paymentMethodId: string;
+  billingDetails: {
+    name: string;
+    email: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
+}
+
+interface ItemDetails {
+  id: string;
+  title: string;
+  description?: string;
+  price?: number;
+  thumbnailUrl?: string;
+  creatorName?: string;
+}
+
+interface PurchaseResult {
+  orderId: string;
+  purchaseDate: string;
+  amount: number;
+  contentId?: string;
+  productId?: string;
+}
+
 interface PurchaseFlowProps {
   contentId?: string;
   productId?: string;
@@ -20,27 +49,27 @@ export default function PurchaseFlow({
   onComplete 
 }: PurchaseFlowProps) {
   const [currentStep, setCurrentStep] = useState<Step>('details');
-  const [purchaseResult, setPurchaseResult] = useState<any>(null);
+  const [purchaseResult, setPurchaseResult] = useState<PurchaseResult | null>(null);
 
-  const { data: itemDetails, isLoading } = useQuery({
+  const { data: itemDetails, isLoading } = useQuery<ItemDetails>({
     queryKey: ['purchase-item', contentId, productId, subscriptionPlan],
     queryFn: async () => {
       if (contentId) {
         const result = await api.content.getContent(contentId);
-        return result as any;
+        return result as ItemDetails;
       } else if (productId) {
         const result = await api.product.getProduct(productId);
-        return result as any;
+        return result as ItemDetails;
       } else if (subscriptionPlan) {
         const result = await api.subscription.getPlanDetails(subscriptionPlan);
-        return result as any;
+        return result as ItemDetails;
       }
       throw new Error('No item specified for purchase');
     },
   });
 
   const purchaseMutation = useMutation({
-    mutationFn: (paymentData: any) => {
+    mutationFn: (paymentData: PaymentData) => {
       if (contentId) {
         return api.purchase.purchaseContent(contentId, paymentData);
       } else if (productId) {
@@ -56,7 +85,7 @@ export default function PurchaseFlow({
     },
   });
 
-  const handlePayment = (paymentData: any) => {
+  const handlePayment = (paymentData: PaymentData) => {
     purchaseMutation.mutate(paymentData);
   };
 

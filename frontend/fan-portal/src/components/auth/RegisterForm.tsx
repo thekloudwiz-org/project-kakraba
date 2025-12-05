@@ -44,9 +44,10 @@ export default function RegisterForm() {
         userType: 'FAN',
       });
       navigate('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Registration failed';
       setError('root', {
-        message: error.message || 'Registration failed',
+        message,
       });
     }
   };

@@ -8,35 +8,75 @@ import ProductCard from './ProductCard';
 
 type ViewMode = 'creators' | 'products' | 'content';
 
+interface Creator {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl?: string;
+  bio?: string;
+}
+
+interface Product {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  thumbnailUrl?: string;
+}
+
+interface Content {
+  id: string;
+  title: string;
+  description: string;
+  contentType: string;
+  thumbnailUrl?: string;
+}
+
+interface FeaturedData {
+  items: (Creator | Product | Content)[];
+  total: number;
+}
+
+interface SearchResults {
+  items: (Creator | Product | Content)[];
+  total: number;
+}
+
+interface Filters {
+  contentType: string;
+  priceRange: string;
+  sortBy: string;
+}
+
 export default function DiscoveryFeed() {
   const [viewMode, setViewMode] = useState<ViewMode>('products');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     contentType: 'ALL',
     priceRange: 'ALL',
     sortBy: 'popular',
   });
 
-  const { data: featuredData, isLoading: featuredLoading } = useQuery({
+  const { data: featuredData, isLoading: featuredLoading } = useQuery<FeaturedData>({
     queryKey: ['featured-content'],
     queryFn: async () => {
       const result = await api.content.getFeaturedContent();
-      return result as { items: any[]; total: number };
+      return result as FeaturedData;
     },
   });
 
-  const { data: searchResults, isLoading: searchLoading } = useQuery({
+  const { data: searchResults, isLoading: searchLoading } = useQuery<SearchResults>({
     queryKey: ['search', viewMode, searchQuery, filters],
     queryFn: async () => {
       if (viewMode === 'creators') {
         const result = await api.creators.searchCreators({ query: searchQuery, ...filters });
-        return result as { items: any[]; total: number };
+        return result as SearchResults;
       } else if (viewMode === 'products') {
         const result = await api.product.listProducts({});
-        return result as { items: any[]; total: number };
+        return result as SearchResults;
       } else {
         const result = await api.content.searchContent({ query: searchQuery, ...filters });
-        return result as { items: any[]; total: number };
+        return result as SearchResults;
       }
     },
     enabled: searchQuery.length > 0,
@@ -46,7 +86,7 @@ export default function DiscoveryFeed() {
     setSearchQuery(query);
   };
 
-  const handleFilterChange = (newFilters: any) => {
+  const handleFilterChange = (newFilters: Filters) => {
     setFilters(newFilters);
   };
 
@@ -109,11 +149,11 @@ export default function DiscoveryFeed() {
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Featured</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {featuredData.items?.map((item: any) => {
+                {featuredData.items?.map((item: Creator | Product | Content) => {
                   if (viewMode === 'creators') {
-                    return <CreatorCard key={item.userId} creator={item} />;
+                    return <CreatorCard key={(item as Creator).id} creator={item as Creator} />;
                   } else {
-                    return <ProductCard key={item.productId || item.contentId} product={item} />;
+                    return <ProductCard key={item.id} product={item as Product | Content} />;
                   }
                 })}
               </div>
@@ -137,11 +177,11 @@ export default function DiscoveryFeed() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {searchResults?.items?.map((item: any) => (
+                  {searchResults?.items?.map((item: Creator | Product | Content) => (
                     viewMode === 'creators' ? (
-                      <CreatorCard key={item.userId} creator={item} />
+                      <CreatorCard key={(item as Creator).id} creator={item as Creator} />
                     ) : (
-                      <ProductCard key={item.productId || item.contentId} product={item} />
+                      <ProductCard key={item.id} product={item as Product | Content} />
                     )
                   ))}
                 </div>

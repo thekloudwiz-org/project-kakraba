@@ -1,9 +1,23 @@
 import { Button } from '@kakraba/shared';
 import { useNavigate } from 'react-router-dom';
 
+interface PurchaseData {
+  orderId: string;
+  purchaseDate: string;
+  amount: number;
+  contentId?: string;
+  productId?: string;
+}
+
+interface ItemDetails {
+  title: string;
+  thumbnailUrl?: string;
+  creatorName?: string;
+}
+
 interface PurchaseConfirmationProps {
-  purchaseData: any;
-  itemDetails: any;
+  purchaseData: PurchaseData;
+  itemDetails: ItemDetails;
   onComplete?: () => void;
 }
 

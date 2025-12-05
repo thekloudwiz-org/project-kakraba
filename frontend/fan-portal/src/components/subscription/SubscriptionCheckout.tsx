@@ -24,7 +24,7 @@ interface SubscriptionCheckoutProps {
     interval: 'month' | 'year';
     benefits: string[];
   };
-  onSubmit: (paymentData: any) => Promise<void>;
+  onSubmit: (paymentData: { paymentMethodId: string; email: string; name: string }) => Promise<void>;
   isLoading?: boolean;
   error?: string;
 }

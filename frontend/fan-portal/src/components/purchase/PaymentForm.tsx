@@ -16,9 +16,14 @@ const paymentSchema = z.object({
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
 
+interface PaymentData {
+  paymentMethodId: string;
+  billingDetails: PaymentFormData;
+}
+
 interface PaymentFormProps {
   amount: number;
-  onSubmit: (paymentData: any) => void;
+  onSubmit: (paymentData: PaymentData) => void;
   isLoading?: boolean;
   error?: string;
 }

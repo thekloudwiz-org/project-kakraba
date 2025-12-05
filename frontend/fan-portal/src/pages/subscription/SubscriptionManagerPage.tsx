@@ -1,18 +1,17 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api, Spinner } from '@kakraba/shared';
+import { api, Spinner, type Subscription } from '@kakraba/shared';
 import SubscriptionCard from '../../components/subscription/SubscriptionCard';
 
 export default function SubscriptionManagerPage() {
   const [showCancelled, setShowCancelled] = useState(false);
 
-  const { data: subscriptions, isLoading } = useQuery({
+  const { data: subscriptions, isLoading } = useQuery<Subscription[]>({
     queryKey: ['subscriptions', showCancelled],
     queryFn: async () => {
-      const result = await api.subscription.getSubscriptions({
+      return await api.subscription.getSubscriptions({
         status: showCancelled ? 'all' : 'active',
       });
-      return result as any[];
     },
   });
 
@@ -57,7 +56,7 @@ export default function SubscriptionManagerPage() {
           </div>
         ) : subscriptions && subscriptions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {subscriptions.map((subscription: any) => (
+            {subscriptions.map((subscription) => (
               <SubscriptionCard key={subscription.subscriptionId} subscription={subscription} />
             ))}
           </div>

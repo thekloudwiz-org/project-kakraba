@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tantml:react-query';
 import { api, Button, Badge, Spinner } from '@kakraba/shared';
+
+interface Review {
+  reviewId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
 
 export default function ProductDetailPage() {
   const { productId } = useParams<{ productId: string }>();
@@ -14,7 +22,7 @@ export default function ProductDetailPage() {
     enabled: !!productId,
   });
 
-  const { data: reviews } = useQuery({
+  const { data: reviews } = useQuery<Review[]>({
     queryKey: ['product-reviews', productId],
     queryFn: () => Promise.resolve([]), // TODO: Implement reviews API
     enabled: !!productId && selectedTab === 'reviews',
@@ -238,7 +246,7 @@ export default function ProductDetailPage() {
             {selectedTab === 'reviews' && (
               <div className="space-y-6">
                 {reviews && reviews.length > 0 ? (
-                  reviews.map((review: any) => (
+                  reviews.map((review) => (
                     <div key={review.reviewId} className="border-b border-gray-200 pb-6 last:border-b-0">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center space-x-3">

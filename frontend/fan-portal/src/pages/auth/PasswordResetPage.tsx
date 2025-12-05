@@ -23,8 +23,9 @@ export default function PasswordResetPage() {
       await resetPassword(email);
       setSuccess('Password reset code sent! Please check your email.');
       setStep('confirm');
-    } catch (err: any) {
-      setError(err.message || 'Failed to send reset code. Please try again.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to send reset code. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -53,8 +54,9 @@ export default function PasswordResetPage() {
       setTimeout(() => {
         window.location.href = '/login';
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to reset password. Please check your code and try again.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to reset password. Please check your code and try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }

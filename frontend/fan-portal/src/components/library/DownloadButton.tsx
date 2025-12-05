@@ -47,8 +47,9 @@ export default function DownloadButton({
         setIsDownloading(false);
       }
     },
-    onError: (err: any) => {
-      setError(err.message || 'Download failed. Please try again.');
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : 'Download failed. Please try again.';
+      setError(message);
       setIsDownloading(false);
     },
   });

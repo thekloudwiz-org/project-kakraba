@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api, Spinner } from '@kakraba/shared';
+import { api, Spinner, type Content, type PaginatedResponse } from '@kakraba/shared';
 import ContentLibraryCard from '../../components/library/ContentLibraryCard';
 
 type ContentFilter = 'all' | 'AUDIO' | 'VIDEO' | 'PDF' | 'IMAGE';
@@ -9,15 +9,14 @@ export default function LibraryPage() {
   const [filter, setFilter] = useState<ContentFilter>('all');
   const [page, setPage] = useState(1);
 
-  const { data: library, isLoading } = useQuery({
+  const { data: library, isLoading } = useQuery<PaginatedResponse<Content> & { totalPages: number }>({
     queryKey: ['content-library', filter, page],
     queryFn: async () => {
-      const result = await api.library.getAccessibleContent({
+      return await api.library.getAccessibleContent({
         contentType: filter === 'all' ? undefined : filter,
         page,
         limit: 12,
       });
-      return result as { items: any[]; totalPages: number };
     },
   });
 
@@ -62,7 +61,7 @@ export default function LibraryPage() {
         ) : library && library.items.length > 0 ? (
           <div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {library.items.map((content: any) => (
+              {library.items.map((content) => (
                 <ContentLibraryCard key={content.contentId} content={content} />
               ))}
             </div>

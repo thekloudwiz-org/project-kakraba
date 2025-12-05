@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@kakraba/shared';
 
+interface Suggestion {
+  text: string;
+  type?: string;
+}
+
 interface SearchBarProps {
   onSearch: (query: string) => void;
   placeholder?: string;
@@ -11,11 +16,11 @@ export default function SearchBar({ onSearch, placeholder = 'Search...' }: Searc
   const [query, setQuery] = useState('');
   const [showAutocomplete, setShowAutocomplete] = useState(false);
 
-  const { data: suggestions } = useQuery({
+  const { data: suggestions } = useQuery<Suggestion[]>({
     queryKey: ['search-suggestions', query],
     queryFn: async () => {
       const result = await api.search.getSuggestions(query);
-      return result as any[];
+      return result as Suggestion[];
     },
     enabled: query.length >= 2,
   });
@@ -64,7 +69,7 @@ export default function SearchBar({ onSearch, placeholder = 'Search...' }: Searc
       {/* Autocomplete Dropdown */}
       {showAutocomplete && suggestions && suggestions.length > 0 && (
         <div className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 max-h-64 overflow-y-auto">
-          {suggestions.map((suggestion: any, index: number) => (
+          {suggestions.map((suggestion: Suggestion, index: number) => (
             <button
               key={index}
               onClick={() => handleSuggestionClick(suggestion.text)}

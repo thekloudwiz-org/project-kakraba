@@ -16,6 +16,11 @@ const checkoutSchema = z.object({
 
 type CheckoutFormData = z.infer<typeof checkoutSchema>;
 
+interface PaymentData {
+  paymentMethodId: string;
+  billingDetails: CheckoutFormData;
+}
+
 interface CheckoutFormProps {
   amount: number;
   itemDetails: {
@@ -23,7 +28,7 @@ interface CheckoutFormProps {
     description?: string;
     thumbnailUrl?: string;
   };
-  onSubmit: (paymentData: any) => Promise<void>;
+  onSubmit: (paymentData: PaymentData) => Promise<void>;
   isLoading?: boolean;
   error?: string;
 }

@@ -7,27 +7,24 @@ import { api, Spinner } from '@kakraba/shared';
 import CheckoutForm from '../../components/checkout/CheckoutForm';
 import PurchaseConfirmation from '../../components/purchase/PurchaseConfirmation';
 
-const stripePromise = loadStripe((import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY || '');
+const stripePromise = loadStripe((import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY as string) || '');
 
 export default function CheckoutPage() {
   const { type, id } = useParams<{ type: string; id: string }>();
   const navigate = useNavigate();
   const [purchaseComplete, setPurchaseComplete] = useState(false);
-  const [purchaseData, setPurchaseData] = useState<any>(null);
+  const [purchaseData, setPurchaseData] = useState<unknown>(null);
 
   // Fetch item details
   const { data: itemDetails, isLoading } = useQuery({
     queryKey: ['checkout-item', type, id],
     queryFn: async () => {
       if (type === 'product') {
-        const result = await api.product.getProduct(id!);
-        return result as any;
+        return await api.product.getProduct(id!);
       } else if (type === 'content') {
-        const result = await api.content.getContent(id!);
-        return result as any;
+        return await api.content.getContent(id!);
       } else if (type === 'subscription') {
-        const result = await api.subscription.getPlanDetails(id!);
-        return result as any;
+        return await api.subscription.getPlanDetails(id!);
       }
       throw new Error('Invalid checkout type');
     },
@@ -36,7 +33,7 @@ export default function CheckoutPage() {
 
   // Purchase mutation
   const purchaseMutation = useMutation({
-    mutationFn: async (paymentData: any) => {
+    mutationFn: async (paymentData: { paymentMethodId: string; email: string; name: string }) => {
       if (type === 'product') {
         return api.purchase.purchaseProduct(id!, paymentData);
       } else if (type === 'content') {
@@ -52,7 +49,7 @@ export default function CheckoutPage() {
     },
   });
 
-  const handlePaymentSubmit = async (paymentData: any) => {
+  const handlePaymentSubmit = async (paymentData: { paymentMethodId: string; email: string; name: string }) => {
     await purchaseMutation.mutateAsync(paymentData);
   };
 

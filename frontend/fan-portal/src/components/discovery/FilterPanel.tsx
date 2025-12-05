@@ -1,11 +1,13 @@
+interface Filters {
+  contentType: string;
+  priceRange: string;
+  sortBy: string;
+}
+
 interface FilterPanelProps {
   viewMode: 'creators' | 'products' | 'content';
-  filters: {
-    contentType: string;
-    priceRange: string;
-    sortBy: string;
-  };
-  onFilterChange: (filters: any) => void;
+  filters: Filters;
+  onFilterChange: (filters: Filters) => void;
 }
 
 export default function FilterPanel({ viewMode, filters, onFilterChange }: FilterPanelProps) {
