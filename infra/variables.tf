@@ -53,3 +53,89 @@ variable "website_domain" {
   type        = string
   default     = ""
 }
+
+# Subdomain Web Hosting Variables
+variable "use_subdomain_hosting" {
+  description = "Use separate subdomains for portals instead of path-based routing"
+  type        = bool
+  default     = false
+}
+
+variable "creator_portal_domain" {
+  description = "Domain for creator portal (e.g., create-kakraba.thekloudwiz.com)"
+  type        = string
+  default     = ""
+}
+
+variable "fan_portal_domain" {
+  description = "Domain for fan portal (e.g., fan-kakraba.thekloudwiz.com)"
+  type        = string
+  default     = ""
+}
+
+variable "landing_page_domain" {
+  description = "Domain for landing page (e.g., kakraba.thekloudwiz.com)"
+  type        = string
+  default     = ""
+}
+
+# Monitoring Variables
+variable "lambda_error_threshold" {
+  description = "Threshold for Lambda errors alarm"
+  type        = number
+  default     = 10
+}
+
+variable "lambda_throttle_threshold" {
+  description = "Threshold for Lambda throttles alarm"
+  type        = number
+  default     = 5
+}
+
+variable "lambda_duration_threshold" {
+  description = "Threshold for Lambda duration alarm (milliseconds)"
+  type        = number
+  default     = 10000
+}
+
+variable "api_5xx_threshold" {
+  description = "Threshold for API Gateway 5XX errors"
+  type        = number
+  default     = 10
+}
+
+variable "api_4xx_threshold" {
+  description = "Threshold for API Gateway 4XX errors"
+  type        = number
+  default     = 50
+}
+
+variable "api_latency_threshold" {
+  description = "Threshold for API Gateway latency (milliseconds)"
+  type        = number
+  default     = 2000
+}
+
+variable "dynamodb_error_threshold" {
+  description = "Threshold for DynamoDB errors"
+  type        = number
+  default     = 10
+}
+
+variable "dynamodb_throttle_threshold" {
+  description = "Threshold for DynamoDB throttle events"
+  type        = number
+  default     = 5
+}
+
+variable "cloudfront_error_rate_threshold" {
+  description = "Threshold for CloudFront error rate (percentage)"
+  type        = number
+  default     = 5
+}
+
+variable "alarm_email" {
+  description = "Email address for alarm notifications (leave empty to skip email notifications)"
+  type        = string
+  default     = ""
+}

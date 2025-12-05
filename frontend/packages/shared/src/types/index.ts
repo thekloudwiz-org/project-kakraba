@@ -1,2 +1,2 @@
-// Shared types will be exported here
-export {};
+// API Types
+export * from './api';

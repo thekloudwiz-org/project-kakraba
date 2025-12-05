@@ -1,2 +1,2 @@
-// Shared hooks will be exported here
-export {};
+// Authentication hooks
+export * from './useAuth';

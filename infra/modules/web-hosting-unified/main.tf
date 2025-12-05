@@ -34,6 +34,117 @@ resource "aws_cloudfront_origin_access_identity" "website" {
   comment = "${var.project_name}-${var.environment}-website-oai"
 }
 
+# CloudFront Function for URI rewriting (SPA routing)
+resource "aws_cloudfront_function" "uri_rewrite" {
+  name    = "${var.project_name}-${var.environment}-uri-rewrite"
+  runtime = "cloudfront-js-1.0"
+  comment = "Rewrite URIs for SPA routing across landing page and portals"
+  publish = true
+  code    = file("${path.module}/../../cloudfront-function-uri-rewrite.js")
+}
+
+# CloudFront Cache Policy for optimized caching
+resource "aws_cloudfront_cache_policy" "optimized_caching" {
+  name        = "${var.project_name}-${var.environment}-optimized-cache"
+  comment     = "Optimized caching policy for static assets"
+  min_ttl     = 0
+  default_ttl = 86400      # 24 hours
+  max_ttl     = 31536000   # 1 year
+
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "none"
+    }
+
+    headers_config {
+      header_behavior = "none"
+    }
+
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+
+    enable_accept_encoding_gzip   = true
+    enable_accept_encoding_brotli = true
+  }
+}
+
+# CloudFront Origin Request Policy for forwarding necessary headers
+resource "aws_cloudfront_origin_request_policy" "s3_origin" {
+  name    = "${var.project_name}-${var.environment}-s3-origin"
+  comment = "Origin request policy for S3 static assets"
+
+  cookies_config {
+    cookie_behavior = "none"
+  }
+
+  headers_config {
+    header_behavior = "whitelist"
+    headers {
+      items = ["Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"]
+    }
+  }
+
+  query_strings_config {
+    query_string_behavior = "none"
+  }
+}
+
+# CloudFront Response Headers Policy for security headers
+resource "aws_cloudfront_response_headers_policy" "security_headers" {
+  name    = "${var.project_name}-${var.environment}-security-headers"
+  comment = "Security headers policy for ${var.project_name}"
+
+  security_headers_config {
+    # Content Security Policy
+    content_security_policy {
+      content_security_policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cognito-idp.*.amazonaws.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.amazonaws.com https://api.stripe.com https://cognito-idp.*.amazonaws.com; frame-src https://js.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self';"
+      override                = true
+    }
+
+    # HTTP Strict Transport Security (HSTS)
+    strict_transport_security {
+      access_control_max_age_sec = 31536000 # 1 year
+      include_subdomains         = true
+      preload                    = true
+      override                   = true
+    }
+
+    # X-Content-Type-Options
+    content_type_options {
+      override = true
+    }
+
+    # X-Frame-Options
+    frame_options {
+      frame_option = "DENY"
+      override     = true
+    }
+
+    # X-XSS-Protection
+    xss_protection {
+      mode_block = true
+      protection = true
+      override   = true
+    }
+
+    # Referrer-Policy
+    referrer_policy {
+      referrer_policy = "strict-origin-when-cross-origin"
+      override        = true
+    }
+  }
+
+  # Custom headers
+  custom_headers_config {
+    items {
+      header   = "Permissions-Policy"
+      value    = "geolocation=(), microphone=(), camera=()"
+      override = true
+    }
+  }
+}
+
 # S3 bucket policy to allow CloudFront access
 resource "aws_s3_bucket_policy" "website" {
   bucket = aws_s3_bucket.website.id
@@ -78,19 +189,18 @@ resource "aws_cloudfront_distribution" "website" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-${aws_s3_bucket.website.id}"
 
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "none"
-      }
-    }
+    # Use managed cache policy for better performance
+    cache_policy_id            = aws_cloudfront_cache_policy.optimized_caching.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.s3_origin.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
 
     viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
     compress               = true
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.uri_rewrite.arn
+    }
   }
 
   # Behavior for creator portal (/creator/*)
@@ -100,19 +210,18 @@ resource "aws_cloudfront_distribution" "website" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-${aws_s3_bucket.website.id}"
 
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "none"
-      }
-    }
+    # Use managed cache policy for better performance
+    cache_policy_id            = aws_cloudfront_cache_policy.optimized_caching.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.s3_origin.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
 
     viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
     compress               = true
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.uri_rewrite.arn
+    }
   }
 
   # Behavior for fan portal (/fan/*)
@@ -122,18 +231,63 @@ resource "aws_cloudfront_distribution" "website" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-${aws_s3_bucket.website.id}"
 
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "none"
-      }
-    }
+    # Use managed cache policy for better performance
+    cache_policy_id            = aws_cloudfront_cache_policy.optimized_caching.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.s3_origin.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
 
     viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
+    compress               = true
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.uri_rewrite.arn
+    }
+  }
+
+  # Behavior for static assets with hash in filename (immutable)
+  # These can be cached for a very long time
+  ordered_cache_behavior {
+    path_pattern     = "/assets/*"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-${aws_s3_bucket.website.id}"
+
+    cache_policy_id            = aws_cloudfront_cache_policy.optimized_caching.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.s3_origin.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
+
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+  }
+
+  # Behavior for creator portal assets
+  ordered_cache_behavior {
+    path_pattern     = "/creator/assets/*"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-${aws_s3_bucket.website.id}"
+
+    cache_policy_id            = aws_cloudfront_cache_policy.optimized_caching.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.s3_origin.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
+
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+  }
+
+  # Behavior for fan portal assets
+  ordered_cache_behavior {
+    path_pattern     = "/fan/assets/*"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-${aws_s3_bucket.website.id}"
+
+    cache_policy_id            = aws_cloudfront_cache_policy.optimized_caching.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.s3_origin.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
+
+    viewer_protocol_policy = "redirect-to-https"
     compress               = true
   }
 

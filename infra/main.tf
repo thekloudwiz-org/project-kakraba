@@ -115,7 +115,7 @@ module "acm_website" {
 
 # Unified Web Hosting - Single bucket with path-based routing
 module "web_hosting" {
-  count  = var.website_domain != "" && var.route53_zone_name != "" ? 1 : 0
+  count  = !var.use_subdomain_hosting && var.website_domain != "" && var.route53_zone_name != "" ? 1 : 0
   source = "./modules/web-hosting-unified"
 
   project_name        = local.project
@@ -124,4 +124,76 @@ module "web_hosting" {
   acm_certificate_arn = module.acm_website[0].validated_certificate_arn
   route53_zone_id     = data.aws_route53_zone.main[0].zone_id
   tags                = local.common_tags
+}
+
+# ACM Certificates for Subdomain Hosting (CloudFront requires us-east-1)
+module "acm_subdomains" {
+  count  = var.use_subdomain_hosting && var.route53_zone_name != "" ? 1 : 0
+  source = "./modules/acm-subdomains"
+
+  providers = {
+    aws.us_east_1 = aws.us_east_1
+  }
+
+  creator_domain  = var.creator_portal_domain
+  fan_domain      = var.fan_portal_domain
+  landing_domain  = var.landing_page_domain
+  zone_id         = data.aws_route53_zone.main[0].zone_id
+  tags            = local.common_tags
+}
+
+# Subdomain Web Hosting - Separate buckets for each portal
+module "web_hosting_subdomains" {
+  count  = var.use_subdomain_hosting && var.route53_zone_name != "" ? 1 : 0
+  source = "./modules/web-hosting-subdomains"
+
+  project_name                 = local.project
+  environment                  = local.environment
+  creator_domain               = var.creator_portal_domain
+  fan_domain                   = var.fan_portal_domain
+  landing_domain               = var.landing_page_domain
+  creator_acm_certificate_arn  = module.acm_subdomains[0].creator_certificate_arn
+  fan_acm_certificate_arn      = module.acm_subdomains[0].fan_certificate_arn
+  landing_acm_certificate_arn  = module.acm_subdomains[0].landing_certificate_arn
+  route53_zone_id              = data.aws_route53_zone.main[0].zone_id
+  tags                         = local.common_tags
+}
+
+# Monitoring Module - CloudWatch dashboards and alarms
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  project_name = local.project
+  environment  = local.environment
+  aws_region   = var.aws_region
+
+  # Lambda monitoring
+  lambda_function_names = [
+    module.compute.lambda_function_name
+  ]
+  lambda_error_threshold    = var.lambda_error_threshold
+  lambda_throttle_threshold = var.lambda_throttle_threshold
+  lambda_duration_threshold = var.lambda_duration_threshold
+
+  # API Gateway monitoring
+  api_gateway_name      = "${local.project}-${local.environment}-api"
+  api_5xx_threshold     = var.api_5xx_threshold
+  api_4xx_threshold     = var.api_4xx_threshold
+  api_latency_threshold = var.api_latency_threshold
+
+  # DynamoDB monitoring
+  dynamodb_table_name         = module.database.table_name
+  dynamodb_error_threshold    = var.dynamodb_error_threshold
+  dynamodb_throttle_threshold = var.dynamodb_throttle_threshold
+
+  # CloudFront monitoring
+  cloudfront_error_rate_threshold = var.cloudfront_error_rate_threshold
+
+  # Alarm notifications
+  alarm_email = var.alarm_email
+
+  # Log group prefix
+  log_group_prefix = "/aws/lambda/${local.project}-${local.environment}"
+
+  tags = local.common_tags
 }

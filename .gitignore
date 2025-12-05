@@ -122,3 +122,30 @@ temp/
 
 # OS
 Thumbs.db
+
+# Planning and temporary files
+.kiro/
+frontend/E2E_TEST_RESULTS.md
+frontend/creator-portal/DEPLOYMENT_NOTES.md
+frontend/fan-portal/DEPLOYMENT_NOTES.md
+
+# Documentation and summary files (not needed in repo)
+CICD_*.md
+IMPLEMENTATION_STATUS.md
+PROJECT_STRUCTURE.md
+TASK_*.md
+
+# Manual/one-time scripts (not needed for CICD)
+infra/scripts/example-*.sh
+infra/scripts/deploy-*.sh
+infra/scripts/update-cloudfront-function.sh
+infra/scripts/validate-deployment.sh
+infra/terraform.tfvars.subdomain-example
+
+# Test results and reports
+frontend/playwright-report/
+frontend/test-results/
+
+# Kiro Spec Files
+.kiro/*
+/.kiro/*

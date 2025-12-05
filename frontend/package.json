@@ -18,10 +18,17 @@
     "build:fan": "pnpm --filter fan-portal build",
     "build:all": "pnpm -r build",
     "test": "pnpm -r test",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:landing": "playwright test --project=landing-page-chromium",
+    "test:e2e:creator": "playwright test --project=creator-portal-chromium",
+    "test:e2e:fan": "playwright test --project=fan-portal-chromium",
     "lint": "pnpm -r lint",
     "type-check": "pnpm -r type-check"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@types/node": "^20.10.0",
     "typescript": "^5.3.0"
   }
