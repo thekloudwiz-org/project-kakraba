@@ -14,6 +14,10 @@ on:
       - '.github/workflows/dev-backend.yml'
       - '.github/workflows/reusable-backend.yml'
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   backend:
     name: Backend - Dev

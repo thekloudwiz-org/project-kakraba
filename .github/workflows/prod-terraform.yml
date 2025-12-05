@@ -8,6 +8,10 @@ on:
       - '.github/workflows/prod-terraform.yml'
       - '.github/workflows/reusable-terraform.yml'
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   terraform:
     name: Terraform - Production

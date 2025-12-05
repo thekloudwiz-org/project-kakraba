@@ -8,6 +8,10 @@ on:
       - '.github/workflows/stg-frontend.yml'
       - '.github/workflows/reusable-frontend.yml'
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   frontend:
     name: Frontend - Staging
