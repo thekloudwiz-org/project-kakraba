@@ -46,7 +46,7 @@ describe('Property 27: Checkout displays product details', () => {
           productId: fc.uuid(),
           title: fc.string({ minLength: 1, maxLength: 100 }),
           description: fc.string({ minLength: 10, maxLength: 500 }),
-          price: fc.float({ min: Math.fround(0.01), max: Math.fround(1000) }),
+          price: fc.float({ min: Math.fround(0.01), max: Math.fround(1000), noNaN: true }),
           thumbnailUrl: fc.webUrl(),
         }),
         async (productData) => {
@@ -215,7 +215,7 @@ describe('Property 31: Subscription purchase creates recurring schedule', () => 
         fc.record({
           creatorId: fc.uuid(),
           interval: fc.constantFrom('month', 'year'),
-          price: fc.float({ min: Math.fround(1), max: Math.fround(100) }),
+          price: fc.float({ min: Math.fround(1), max: Math.fround(100), noNaN: true }),
         }),
         async (subscriptionData) => {
           const mockResult = {

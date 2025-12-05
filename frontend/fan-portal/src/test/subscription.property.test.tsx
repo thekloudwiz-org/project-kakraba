@@ -51,7 +51,7 @@ describe('Property 40: Subscription view displays all active subscriptions', () 
             creatorId: fc.uuid(),
             creatorName: fc.string({ minLength: 1, maxLength: 50 }),
             status: fc.constantFrom('active', 'cancelled', 'past_due'),
-            price: fc.float({ min: Math.fround(1), max: Math.fround(100) }),
+            price: fc.float({ min: Math.fround(1), max: Math.fround(100), noNaN: true }),
             interval: fc.constantFrom('month', 'year'),
             currentPeriodEnd: fc.date({ min: new Date() }).map(d => d.toISOString()),
             cancelAtPeriodEnd: fc.boolean(),
