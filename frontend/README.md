@@ -147,3 +147,4 @@ Each application requires environment variables for API endpoints and AWS config
 3. Run type checking: `pnpm type-check`
 4. Run linting: `pnpm lint`
 5. Build to verify: `pnpm build:all`
+# Deployment configured
