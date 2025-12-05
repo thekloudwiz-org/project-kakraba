@@ -64,7 +64,7 @@ jobs:
         run: pnpm --filter ${{ matrix.package }} type-check
       
       - name: Run tests
-        run: pnpm --filter ${{ matrix.package }} test --coverage
+        run: pnpm --filter ${{ matrix.package }} test -- --coverage
       
       - name: Upload coverage
         uses: codecov/codecov-action@v3
