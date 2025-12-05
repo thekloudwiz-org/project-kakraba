@@ -22,8 +22,9 @@ vi.mock('@kakraba/shared', async () => {
         try {
           await amplifyAuth.signIn({ username: email, password });
           return { success: true };
-        } catch (error: any) {
-          return { success: false, error: error.message };
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : 'Unknown error';
+          return { success: false, error: message };
         }
       },
       isLoading: false,
@@ -44,8 +45,9 @@ vi.mock('@kakraba/shared', async () => {
             },
           });
           return { success: true, userId: result.userId };
-        } catch (error: any) {
-          return { success: false, error: error.message };
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : 'Unknown error';
+          return { success: false, error: message };
         }
       },
       isLoading: false,
@@ -67,9 +69,9 @@ describe('Property 1: Valid registration creates Cognito account', () => {
 
     vi.mocked(amplifyAuth.signUp).mockResolvedValue({
       isSignUpComplete: false,
-      nextStep: { signUpStep: 'CONFIRM_SIGN_UP' },
+      nextStep: { signUpStep: 'CONFIRM_SIGN_UP' as const },
       userId: 'test-user-id',
-    } as any);
+    });
 
     render(
       <BrowserRouter>
@@ -141,8 +143,8 @@ describe('Property 2: Valid credentials establish session', () => {
 
     vi.mocked(amplifyAuth.signIn).mockResolvedValue({
       isSignedIn: true,
-      nextStep: { signInStep: 'DONE' },
-    } as any);
+      nextStep: { signInStep: 'DONE' as const },
+    });
 
     render(
       <BrowserRouter>

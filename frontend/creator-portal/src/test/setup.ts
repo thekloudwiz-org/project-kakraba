@@ -8,7 +8,7 @@ afterEach(() => {
 });
 
 // Mock window.location
-delete (window as any).location;
+delete (window as { location?: Location }).location;
 window.location = {
   href: '',
   origin: 'http://localhost:3000',
@@ -22,4 +22,6 @@ window.location = {
   assign: () => {},
   reload: () => {},
   replace: () => {},
-} as any;
+  ancestorOrigins: {} as DOMStringList,
+  toString: () => 'http://localhost:3000/',
+} as Location;

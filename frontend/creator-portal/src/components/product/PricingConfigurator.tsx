@@ -1,9 +1,20 @@
 import { UseFormRegister, FieldErrors, UseFormWatch } from 'react-hook-form';
 
+interface ProductFormData {
+  title: string;
+  description: string;
+  contentIds: string[];
+  price: number;
+  accessType: 'PURCHASE' | 'RENTAL';
+  downloadQuota?: number;
+  allowSubscription: boolean;
+  productType: 'SINGLE' | 'BUNDLE';
+}
+
 interface PricingConfiguratorProps {
-  register: UseFormRegister<any>;
-  errors: FieldErrors<any>;
-  watch: UseFormWatch<any>;
+  register: UseFormRegister<ProductFormData>;
+  errors: FieldErrors<ProductFormData>;
+  watch: UseFormWatch<ProductFormData>;
 }
 
 export default function PricingConfigurator({ register, errors, watch }: PricingConfiguratorProps) {

@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
-import * as fc from 'fast-check';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
 import RevenueChart from '../components/dashboard/RevenueChart';
 import ContentPerformanceTable from '../components/dashboard/ContentPerformanceTable';

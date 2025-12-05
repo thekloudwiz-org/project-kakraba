@@ -163,7 +163,7 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
 
       await uploadFile(file);
     }
-  }, []);
+  }, [uploadFile]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
