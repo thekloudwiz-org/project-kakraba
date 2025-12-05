@@ -21,7 +21,7 @@ export default defineConfig({
           // Vendor chunks for better caching
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'query-vendor': ['@tanstack/react-query'],
-          'aws-vendor': ['aws-amplify', '@aws-amplify/auth'],
+          'aws-vendor': ['aws-amplify'],
           'stripe-vendor': ['@stripe/stripe-js', '@stripe/react-stripe-js'],
         },
       },

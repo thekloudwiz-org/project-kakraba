@@ -20,7 +20,7 @@ export default defineConfig({
         manualChunks: {
           // Vendor chunks for better caching
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'aws-vendor': ['aws-amplify', '@aws-amplify/auth'],
+          'aws-vendor': ['aws-amplify'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
         },
       },
