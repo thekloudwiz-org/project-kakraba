@@ -12,7 +12,7 @@ vi.mock('@kakraba/shared', async () => {
     ...actual,
     api: {
       content: {
-        getContent: vi.fn(),
+        listContent: vi.fn(),
         getContentById: vi.fn(),
         updateContent: vi.fn(),
         deleteContent: vi.fn(),
@@ -196,7 +196,7 @@ describe('Property 8: Content library displays all items', () => {
     ];
 
     for (const testCase of testCases) {
-      vi.mocked(api.content.getContent).mockResolvedValue({
+      vi.mocked(api.content.listContent).mockResolvedValue({
         items: testCase.items,
         total: testCase.items.length,
         page: 1,

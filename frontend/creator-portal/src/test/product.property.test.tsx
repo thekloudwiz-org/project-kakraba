@@ -12,7 +12,7 @@ vi.mock('@kakraba/shared', async () => {
     ...actual,
     api: {
       product: {
-        getProducts: vi.fn(),
+        listProducts: vi.fn(),
         getProductById: vi.fn(),
         createProduct: vi.fn(),
         updateProduct: vi.fn(),
@@ -223,7 +223,7 @@ describe('Property 14: Product save creates complete record', () => {
       },
     ];
 
-    vi.mocked(api.product.getProducts).mockResolvedValue({
+    vi.mocked(api.product.listProducts).mockResolvedValue({
       items: mockProducts,
       total: mockProducts.length,
       page: 1,
