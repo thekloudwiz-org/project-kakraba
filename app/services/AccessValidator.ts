@@ -18,13 +18,13 @@ export class AccessValidator {
   ): Promise<AccessValidationResult> {
     // Step 1: Check for direct access right
     const directAccess = await this.checkDirectAccessRight(userId, productId, intent);
-    if (directAccess.allowed) {
+    if (directAccess.allowed || directAccess.errorMessage) {
       return directAccess;
     }
 
     // Step 2: If no direct access, check subscription
     const subscriptionAccess = await this.checkSubscriptionAccess(userId, productId, intent);
-    if (subscriptionAccess.allowed) {
+    if (subscriptionAccess.allowed || subscriptionAccess.errorMessage) {
       return subscriptionAccess;
     }
 
