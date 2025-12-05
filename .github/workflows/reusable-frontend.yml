@@ -42,24 +42,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
       
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       
       - name: Run linter
-        run: npm run lint --workspace=${{ matrix.package }}
+        run: pnpm --filter ${{ matrix.package }} lint
       
       - name: Type check
-        run: npm run type-check --workspace=${{ matrix.package }}
+        run: pnpm --filter ${{ matrix.package }} type-check
       
       - name: Run tests
-        run: npm test --workspace=${{ matrix.package }} -- --coverage
+        run: pnpm --filter ${{ matrix.package }} test --coverage
       
       - name: Upload coverage
         uses: codecov/codecov-action@v3
@@ -93,12 +98,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -146,7 +156,7 @@ jobs:
           echo "Using CloudFront ID: $CLOUDFRONT_ID"
       
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       
       - name: Build application
         env:
@@ -189,18 +199,18 @@ jobs:
               ;;
           esac
           
-          npm run build --workspace=${{ matrix.package }}
+          pnpm --filter ${{ matrix.package }} build
       
       - name: Deploy to S3
         run: |
-          aws s3 sync packages/${{ matrix.package }}/dist/ \
+          aws s3 sync ${{ matrix.package }}/dist/ \
             s3://${{ steps.targets.outputs.s3-bucket }}/${{ matrix.s3-path }} \
             --delete \
             --cache-control "public, max-age=31536000, immutable" \
             --exclude "index.html"
           
           # Upload index.html with no-cache
-          aws s3 cp packages/${{ matrix.package }}/dist/index.html \
+          aws s3 cp ${{ matrix.package }}/dist/index.html \
             s3://${{ steps.targets.outputs.s3-bucket }}/${{ matrix.s3-path }}index.html \
             --cache-control "no-cache, no-store, must-revalidate"
       
