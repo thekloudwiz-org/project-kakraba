@@ -2,6 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fc from 'fast-check';
 import { api } from '@kakraba/shared';
 
+interface Subscription {
+  subscriptionId: string;
+  creatorId: string;
+  creatorName: string;
+  status: string;
+  price: number;
+  interval: string;
+  currentPeriodEnd: string;
+  cancelAtPeriodEnd: boolean;
+  createdAt: string;
+}
+
 // Mock the API
 vi.mock('@kakraba/shared', async () => {
   const actual = await vi.importActual('@kakraba/shared');
@@ -56,7 +68,7 @@ describe('Property 40: Subscription view displays all active subscriptions', () 
           expect(subscriptions.length).toBe(subscriptionList.length);
 
           // Verify each subscription has required fields
-          subscriptions.forEach((sub: any) => {
+          subscriptions.forEach((sub: Subscription) => {
             expect(sub.subscriptionId).toBeTruthy();
             expect(sub.creatorId).toBeTruthy();
             expect(sub.creatorName).toBeTruthy();
@@ -106,7 +118,7 @@ describe('Property 40: Subscription view displays all active subscriptions', () 
     const activeSubscriptions = await api.subscription.getSubscriptions({ status: 'active' });
 
     // All returned subscriptions should be active
-    activeSubscriptions.forEach((sub: any) => {
+    activeSubscriptions.forEach((sub: Subscription) => {
       expect(sub.status).toBe('active');
     });
   });

@@ -2,6 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fc from 'fast-check';
 import { api } from '@kakraba/shared';
 
+interface ContentItem {
+  contentId: string;
+  title: string;
+  contentType: string;
+  accessType: string;
+  creatorName: string;
+}
+
 // Mock the API
 vi.mock('@kakraba/shared', async () => {
   const actual = await vi.importActual('@kakraba/shared');
@@ -58,7 +66,7 @@ describe('Property 33: Library displays all accessible content', () => {
           expect(library.items.length).toBe(contentList.length);
           
           // Verify each item has required fields
-          library.items.forEach((item: any) => {
+          library.items.forEach((item: ContentItem) => {
             expect(item.contentId).toBeTruthy();
             expect(item.title).toBeTruthy();
             expect(item.contentType).toBeTruthy();
@@ -95,7 +103,7 @@ describe('Property 33: Library displays all accessible content', () => {
       const library = await api.library.getAccessibleContent({ contentType });
 
       // All items should match the filter
-      library.items.forEach((item: any) => {
+      library.items.forEach((item: ContentItem) => {
         expect(item.contentType).toBe(contentType);
       });
     }

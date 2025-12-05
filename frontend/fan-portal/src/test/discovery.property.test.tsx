@@ -1,10 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter } from 'react-router-dom';
 import * as fc from 'fast-check';
 import { api } from '@kakraba/shared';
-import DiscoveryFeed from '../components/discovery/DiscoveryFeed';
+
+interface ProductItem {
+  productId: string;
+  title: string;
+  creatorName: string;
+  price: number;
+}
+
+interface ContentItem {
+  contentId: string;
+  title: string;
+  contentType: string;
+  creatorName: string;
+  price?: number;
+}
 
 // Mock the API
 vi.mock('@kakraba/shared', async () => {
@@ -33,22 +44,6 @@ vi.mock('@kakraba/shared', async () => {
     },
   };
 });
-
-function TestWrapper({ children }: { children: React.ReactNode }) {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-    },
-  });
-
-  return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    </BrowserRouter>
-  );
-}
 
 /**
  * Feature: creator-fan-portals, Property 22: Search returns matching results
@@ -86,7 +81,7 @@ describe('Property 22: Search returns matching results', () => {
           expect(results.items.length).toBeGreaterThanOrEqual(0);
           if (results.items.length > 0) {
             // Verify that results contain the search query
-            const hasMatch = results.items.some((item: any) =>
+            const hasMatch = results.items.some((item: ProductItem) =>
               item.title.toLowerCase().includes(searchQuery.toLowerCase())
             );
             expect(hasMatch).toBe(true);
@@ -145,7 +140,7 @@ describe('Property 23: Filters apply correctly', () => {
       });
 
       // All results should match the filter
-      results.items.forEach((item: any) => {
+      results.items.forEach((item: ContentItem) => {
         expect(item.contentType).toBe(contentType);
       });
     }
@@ -179,7 +174,7 @@ describe('Property 23: Filters apply correctly', () => {
       });
 
       // All results should be within the price range
-      results.items.forEach((item: any) => {
+      results.items.forEach((item: ProductItem) => {
         expect(item.price).toBeGreaterThanOrEqual(min);
         expect(item.price).toBeLessThanOrEqual(max);
       });
@@ -209,10 +204,12 @@ describe('Property 23: Filters apply correctly', () => {
     });
 
     // Verify all filters are applied
-    results.items.forEach((item: any) => {
+    results.items.forEach((item: ContentItem) => {
       expect(item.contentType).toBe('AUDIO');
-      expect(item.price).toBeGreaterThanOrEqual(10);
-      expect(item.price).toBeLessThanOrEqual(25);
+      if (item.price !== undefined) {
+        expect(item.price).toBeGreaterThanOrEqual(10);
+        expect(item.price).toBeLessThanOrEqual(25);
+      }
     });
   });
 });

@@ -1,6 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
 import * as fc from 'fast-check';
 import { useAuth } from '@kakraba/shared';
 
@@ -12,11 +10,6 @@ vi.mock('@kakraba/shared', async () => {
     useAuth: vi.fn(),
   };
 });
-
-// Test wrapper
-function TestWrapper({ children }: { children: React.ReactNode }) {
-  return <BrowserRouter>{children}</BrowserRouter>;
-}
 
 /**
  * Feature: creator-fan-portals, Property 1: Valid registration creates Cognito account
