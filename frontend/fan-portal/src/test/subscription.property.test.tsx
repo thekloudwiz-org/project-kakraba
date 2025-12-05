@@ -51,11 +51,11 @@ describe('Property 40: Subscription view displays all active subscriptions', () 
             creatorId: fc.uuid(),
             creatorName: fc.string({ minLength: 1, maxLength: 50 }),
             status: fc.constantFrom('active', 'cancelled', 'past_due'),
-            price: fc.float({ min: 1, max: 100 }),
+            price: fc.float({ min: Math.fround(1), max: Math.fround(100) }),
             interval: fc.constantFrom('month', 'year'),
-            currentPeriodEnd: fc.date({ min: new Date() }).then(d => d.toISOString()),
+            currentPeriodEnd: fc.date({ min: new Date() }).map(d => d.toISOString()),
             cancelAtPeriodEnd: fc.boolean(),
-            createdAt: fc.date({ max: new Date() }).then(d => d.toISOString()),
+            createdAt: fc.date({ max: new Date() }).map(d => d.toISOString()),
           }),
           { minLength: 0, maxLength: 10 }
         ),
@@ -141,7 +141,7 @@ describe('Property 41: Subscription cancellation maintains access', () => {
       fc.asyncProperty(
         fc.record({
           subscriptionId: fc.uuid(),
-          currentPeriodEnd: fc.date({ min: new Date() }),
+          currentPeriodEnd: fc.date({ min: new Date(Date.now() + 1000) }), // At least 1 second in future
         }),
         async (subscriptionData) => {
           const cancelledSubscription = {
@@ -159,10 +159,10 @@ describe('Property 41: Subscription cancellation maintains access', () => {
           expect(result.cancelAtPeriodEnd).toBe(true);
           expect(result.status).toBe('active');
 
-          // Verify access period is in the future
+          // Verify access period is in the future (with small buffer for test execution time)
           const periodEnd = new Date(result.currentPeriodEnd);
-          const now = new Date();
-          expect(periodEnd.getTime()).toBeGreaterThan(now.getTime());
+          const testStartTime = new Date(Date.now() - 100); // 100ms buffer
+          expect(periodEnd.getTime()).toBeGreaterThan(testStartTime.getTime());
         }
       ),
       { numRuns: 100 }

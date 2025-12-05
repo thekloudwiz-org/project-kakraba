@@ -238,7 +238,13 @@ describe('Property 14: Product save creates complete record', () => {
 
     // Wait for products to load
     await waitFor(() => {
-      expect(screen.getByText('Product 1')).toBeInTheDocument();
+      const firstProductTitle = mockProducts[0]?.title;
+      if (firstProductTitle) {
+        expect(screen.getByText(firstProductTitle)).toBeInTheDocument();
+      } else {
+        // If no products, just check that the component rendered
+        expect(screen.getByText(/Product Catalog|Create Product/i)).toBeInTheDocument();
+      }
     });
 
     // Verify all products are displayed

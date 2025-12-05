@@ -211,7 +211,13 @@ describe('Property 8: Content library displays all items', () => {
 
       // Wait for content to load
       await waitFor(() => {
-        expect(screen.queryByText('Test Audio') || screen.queryByText('Test Video')).toBeTruthy();
+        const firstItemTitle = testCase.items[0]?.title;
+        if (firstItemTitle) {
+          expect(screen.queryByText(firstItemTitle)).toBeTruthy();
+        } else {
+          // If no items, just check that the component rendered
+          expect(screen.getByText(/Content Library|Upload/i)).toBeInTheDocument();
+        }
       });
 
       // Verify all items are displayed

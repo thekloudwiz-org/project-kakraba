@@ -277,7 +277,7 @@ describe('Property 25: Product view displays all details', () => {
           productId: fc.uuid(),
           title: fc.string({ minLength: 1, maxLength: 100 }),
           description: fc.string({ minLength: 10, maxLength: 1000 }),
-          price: fc.float({ min: 0, max: 1000 }),
+          price: fc.float({ min: Math.fround(0), max: Math.fround(1000) }),
           creatorId: fc.uuid(),
           creatorName: fc.string({ minLength: 1, maxLength: 50 }),
           purchaseCount: fc.integer({ min: 0, max: 100000 }),

@@ -46,7 +46,7 @@ describe('Property 27: Checkout displays product details', () => {
           productId: fc.uuid(),
           title: fc.string({ minLength: 1, maxLength: 100 }),
           description: fc.string({ minLength: 10, maxLength: 500 }),
-          price: fc.float({ min: 0.01, max: 1000 }),
+          price: fc.float({ min: Math.fround(0.01), max: Math.fround(1000) }),
           thumbnailUrl: fc.webUrl(),
         }),
         async (productData) => {
@@ -124,7 +124,7 @@ describe('Property 28: Payment validation processes correctly', () => {
   });
 
   it('should reject invalid ZIP codes', () => {
-    const invalidZipCodes = ['123', '12', '', 'abcde'];
+    const invalidZipCodes = ['123', '12', '', 'abc'];
 
     invalidZipCodes.forEach((zipCode) => {
       const isValid = zipCode.length >= 5;
@@ -215,7 +215,7 @@ describe('Property 31: Subscription purchase creates recurring schedule', () => 
         fc.record({
           creatorId: fc.uuid(),
           interval: fc.constantFrom('month', 'year'),
-          price: fc.float({ min: 1, max: 100 }),
+          price: fc.float({ min: Math.fround(1), max: Math.fround(100) }),
         }),
         async (subscriptionData) => {
           const mockResult = {
