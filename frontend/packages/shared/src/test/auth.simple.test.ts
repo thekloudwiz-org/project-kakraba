@@ -22,9 +22,9 @@ describe('Property 1: Valid registration creates Cognito account', () => {
 
     vi.mocked(amplifyAuth.signUp).mockResolvedValue({
       isSignUpComplete: false,
-      nextStep: { signUpStep: 'CONFIRM_SIGN_UP' },
+      nextStep: { signUpStep: 'CONFIRM_SIGN_UP' as const },
       userId: 'test-user-id',
-    } as any);
+    } as ReturnType<typeof amplifyAuth.signUp> extends Promise<infer T> ? T : never);
 
     await amplifyAuth.signUp({
       username: email,
@@ -53,8 +53,8 @@ describe('Property 2: Valid credentials establish session', () => {
 
     vi.mocked(amplifyAuth.signIn).mockResolvedValue({
       isSignedIn: true,
-      nextStep: { signInStep: 'DONE' },
-    } as any);
+      nextStep: { signInStep: 'DONE' as const },
+    } as ReturnType<typeof amplifyAuth.signIn> extends Promise<infer T> ? T : never);
 
     await amplifyAuth.signIn({
       username: email,
@@ -75,8 +75,8 @@ describe('Property 4: Password reset initiates Cognito flow', () => {
 
     vi.mocked(amplifyAuth.resetPassword).mockResolvedValue({
       isPasswordReset: false,
-      nextStep: { resetPasswordStep: 'CONFIRM_RESET_PASSWORD_WITH_CODE' },
-    } as any);
+      nextStep: { resetPasswordStep: 'CONFIRM_RESET_PASSWORD_WITH_CODE' as const },
+    } as ReturnType<typeof amplifyAuth.resetPassword> extends Promise<infer T> ? T : never);
 
     await amplifyAuth.resetPassword({ username: email });
 
