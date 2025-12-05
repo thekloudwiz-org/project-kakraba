@@ -57,6 +57,13 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ inputs.aws-region }}
       
+      - name: Verify AWS credentials
+        run: |
+          echo "AWS Account ID: $(aws sts get-caller-identity --query Account --output text)"
+          echo "AWS User/Role: $(aws sts get-caller-identity --query Arn --output text)"
+          echo "Testing S3 bucket access..."
+          aws s3 ls s3://thekloudwiz-tf-state-bucket/ || echo "Cannot access S3 bucket"
+      
       - name: Terraform Init
         run: |
           terraform init \
