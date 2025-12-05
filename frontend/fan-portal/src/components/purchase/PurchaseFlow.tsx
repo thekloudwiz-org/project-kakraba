@@ -54,16 +54,16 @@ export default function PurchaseFlow({
 
   const { data: itemDetails, isLoading } = useQuery<ItemDetails>({
     queryKey: ['purchase-item', contentId, productId, subscriptionPlan],
-    queryFn: async () => {
+    queryFn: async (): Promise<ItemDetails> => {
       if (contentId) {
         const result = await api.content.getContent(contentId);
-        return result as ItemDetails;
+        return { ...(result as any), id: contentId } as ItemDetails;
       } else if (productId) {
         const result = await api.product.getProduct(productId);
-        return result as ItemDetails;
+        return { ...(result as any), id: productId } as ItemDetails;
       } else if (subscriptionPlan) {
         const result = await api.subscription.getPlanDetails(subscriptionPlan);
-        return result as ItemDetails;
+        return { ...(result as any), id: subscriptionPlan } as ItemDetails;
       }
       throw new Error('No item specified for purchase');
     },
@@ -198,7 +198,7 @@ export default function PurchaseFlow({
             <h2 className="text-2xl font-bold text-gray-900">Payment Information</h2>
             
             <PaymentForm
-              amount={itemDetails.price || itemDetails.amount}
+              amount={itemDetails.price || itemDetails.amount || 0}
               onSubmit={handlePayment}
               isLoading={purchaseMutation.isPending}
               error={purchaseMutation.error?.message}

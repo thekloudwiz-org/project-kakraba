@@ -1,8 +1,18 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api, Spinner, Badge, type Transaction, type PaginatedResponse } from '@kakraba/shared';
+import { api, Spinner, Badge, type Transaction as BaseTransaction, type PaginatedResponse } from '@kakraba/shared';
 
 type FilterType = 'all' | 'content' | 'product' | 'subscription';
+
+// Extended Transaction interface with UI properties
+interface Transaction extends BaseTransaction {
+  thumbnailUrl?: string;
+  itemTitle: string;
+  type: 'content' | 'product' | 'subscription';
+  creatorName: string;
+  purchaseDate: string;
+  interval?: 'month' | 'year';
+}
 
 export default function PurchaseHistoryPage() {
   const [filter, setFilter] = useState<FilterType>('all');
@@ -25,14 +35,14 @@ export default function PurchaseHistoryPage() {
   });
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'completed':
+    switch (status.toUpperCase()) {
+      case 'COMPLETED':
         return <Badge variant="success">Completed</Badge>;
-      case 'pending':
+      case 'PENDING':
         return <Badge variant="default">Pending</Badge>;
-      case 'failed':
+      case 'FAILED':
         return <Badge variant="destructive">Failed</Badge>;
-      case 'refunded':
+      case 'REFUNDED':
         return <Badge variant="secondary">Refunded</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
@@ -146,12 +156,12 @@ export default function PurchaseHistoryPage() {
                 {/* Actions */}
                 <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    {purchase.status === 'completed' && purchase.type !== 'subscription' && (
+                    {purchase.status === 'COMPLETED' && purchase.type !== 'subscription' && (
                       <button className="text-sm text-purple-600 hover:text-purple-700 font-medium">
                         View Content
                       </button>
                     )}
-                    {purchase.type === 'subscription' && purchase.status === 'completed' && (
+                    {purchase.type === 'subscription' && purchase.status === 'COMPLETED' && (
                       <button className="text-sm text-purple-600 hover:text-purple-700 font-medium">
                         Manage Subscription
                       </button>

@@ -1,9 +1,18 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api, Spinner, type Content, type PaginatedResponse } from '@kakraba/shared';
+import { api, Spinner, type Content as BaseContent, type PaginatedResponse } from '@kakraba/shared';
 import ContentLibraryCard from '../../components/library/ContentLibraryCard';
 
 type ContentFilter = 'all' | 'AUDIO' | 'VIDEO' | 'PDF' | 'IMAGE';
+
+// Extended Content interface with library-specific properties
+interface Content extends BaseContent {
+  creatorName: string;
+  accessType: 'purchase' | 'subscription';
+  downloadQuota?: number;
+  downloadCount?: number;
+  expiresAt?: string;
+}
 
 export default function LibraryPage() {
   const [filter, setFilter] = useState<ContentFilter>('all');

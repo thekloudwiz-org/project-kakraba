@@ -1,7 +1,17 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { api, Button, Badge, Spinner, type User, type Product, type Content } from '@kakraba/shared';
+import { api, Button, Badge, Spinner, type User as BaseUser, type Product, type Content } from '@kakraba/shared';
 import ProductCard from '../../components/discovery/ProductCard';
+
+// Extended User interface with creator-specific properties
+interface User extends BaseUser {
+  followerCount?: number;
+  contentCount?: number;
+  productCount?: number;
+  categories?: string[];
+  subscriptionEnabled?: boolean;
+  subscriptionPrice?: number;
+}
 
 export default function CreatorProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -141,7 +151,10 @@ export default function CreatorProfilePage() {
           ) : creatorProducts && creatorProducts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {creatorProducts.map((product: Product) => (
-                <ProductCard key={product.productId} product={product} />
+                <ProductCard key={product.productId} product={{
+                  ...product,
+                  creatorName: product.creatorName || creator.displayName || creator.username,
+                }} />
               ))}
             </div>
           ) : (
@@ -161,7 +174,10 @@ export default function CreatorProfilePage() {
           ) : creatorContent && creatorContent.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {creatorContent.map((content: Content) => (
-                <ProductCard key={content.contentId} product={content} />
+                <ProductCard key={content.contentId} product={{
+                  ...content,
+                  creatorName: creator.displayName || creator.username,
+                }} />
               ))}
             </div>
           ) : (

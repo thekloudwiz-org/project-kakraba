@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api, Spinner, type Subscription } from '@kakraba/shared';
+import { api, Spinner, type Subscription as BaseSubscription } from '@kakraba/shared';
 import SubscriptionCard from '../../components/subscription/SubscriptionCard';
+
+// Extended Subscription interface with UI properties
+interface Subscription extends BaseSubscription {
+  creatorName: string;
+  creatorAvatar?: string;
+  price: number;
+  interval: 'month' | 'year';
+}
 
 export default function SubscriptionManagerPage() {
   const [showCancelled, setShowCancelled] = useState(false);
@@ -58,7 +66,13 @@ export default function SubscriptionManagerPage() {
         ) : subscriptions && subscriptions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {subscriptions.map((subscription: Subscription) => (
-              <SubscriptionCard key={subscription.subscriptionId} subscription={subscription} />
+              <SubscriptionCard
+                key={subscription.subscriptionId}
+                subscription={{
+                  ...subscription,
+                  status: subscription.status.toLowerCase() as 'active' | 'cancelled' | 'past_due',
+                }}
+              />
             ))}
           </div>
         ) : (

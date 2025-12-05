@@ -9,8 +9,14 @@ import PurchaseConfirmation from '../../components/purchase/PurchaseConfirmation
 
 interface PaymentData {
   paymentMethodId: string;
-  email: string;
-  name: string;
+  billingDetails: {
+    email: string;
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
 }
 
 interface PurchaseResult {
@@ -22,7 +28,7 @@ interface PurchaseResult {
 }
 
 interface ItemDetails {
-  title?: string;
+  title: string;
   name?: string;
   description?: string;
   thumbnailUrl?: string;
@@ -30,7 +36,14 @@ interface ItemDetails {
   amount?: number;
 }
 
-const stripeKey = import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY;
+// Extend ImportMeta to include env
+declare global {
+  interface ImportMeta {
+    env: Record<string, string | undefined>;
+  }
+}
+
+const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = loadStripe(typeof stripeKey === 'string' ? stripeKey : '');
 
 export default function CheckoutPage() {
@@ -42,13 +55,16 @@ export default function CheckoutPage() {
   // Fetch item details
   const { data: itemDetails, isLoading } = useQuery<ItemDetails>({
     queryKey: ['checkout-item', type, id],
-    queryFn: async () => {
+    queryFn: async (): Promise<ItemDetails> => {
       if (type === 'product') {
-        return await api.product.getProduct(id!);
+        const result = await api.product.getProduct(id!);
+        return result as ItemDetails;
       } else if (type === 'content') {
-        return await api.content.getContent(id!);
+        const result = await api.content.getContent(id!);
+        return result as ItemDetails;
       } else if (type === 'subscription') {
-        return await api.subscription.getPlanDetails(id!);
+        const result = await api.subscription.getPlanDetails(id!);
+        return result as ItemDetails;
       }
       throw new Error('Invalid checkout type');
     },
@@ -57,13 +73,16 @@ export default function CheckoutPage() {
 
   // Purchase mutation
   const purchaseMutation = useMutation<PurchaseResult, Error, PaymentData>({
-    mutationFn: async (paymentData: PaymentData) => {
+    mutationFn: async (paymentData: PaymentData): Promise<PurchaseResult> => {
       if (type === 'product') {
-        return api.purchase.purchaseProduct(id!, paymentData);
+        const result = await api.purchase.purchaseProduct(id!, paymentData);
+        return result as PurchaseResult;
       } else if (type === 'content') {
-        return api.purchase.purchaseContent(id!, paymentData);
+        const result = await api.purchase.purchaseContent(id!, paymentData);
+        return result as PurchaseResult;
       } else if (type === 'subscription') {
-        return api.subscription.subscribe(id!, paymentData);
+        const result = await api.subscription.subscribe(id!, paymentData);
+        return result as PurchaseResult;
       }
       throw new Error('Invalid checkout type');
     },
@@ -134,7 +153,7 @@ export default function CheckoutPage() {
               <CheckoutForm
                 amount={itemDetails.price || itemDetails.amount || 0}
                 itemDetails={{
-                  title: itemDetails.title || itemDetails.name,
+                  title: itemDetails.title || itemDetails.name || 'Product',
                   description: itemDetails.description,
                   thumbnailUrl: itemDetails.thumbnailUrl,
                 }}
