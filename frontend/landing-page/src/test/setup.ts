@@ -8,20 +8,23 @@ afterEach(() => {
 });
 
 // Mock window.location
-delete (window as { location?: Location }).location;
-window.location = {
-  href: '',
-  origin: 'http://localhost:3000',
-  protocol: 'http:',
-  host: 'localhost:3000',
-  hostname: 'localhost',
-  port: '3000',
-  pathname: '/',
-  search: '',
-  hash: '',
-  assign: () => {},
-  reload: () => {},
-  replace: () => {},
-  ancestorOrigins: {} as DOMStringList,
-  toString: () => 'http://localhost:3000/',
-} as Location;
+Object.defineProperty(window, 'location', {
+  value: {
+    href: '',
+    origin: 'http://localhost:3000',
+    protocol: 'http:',
+    host: 'localhost:3000',
+    hostname: 'localhost',
+    port: '3000',
+    pathname: '/',
+    search: '',
+    hash: '',
+    assign: () => {},
+    reload: () => {},
+    replace: () => {},
+    ancestorOrigins: {} as DOMStringList,
+    toString: () => 'http://localhost:3000/',
+  },
+  writable: true,
+  configurable: true,
+});
