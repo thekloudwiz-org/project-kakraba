@@ -9,7 +9,8 @@ export default function CreatorProfilePage() {
   const { data: creator, isLoading: creatorLoading } = useQuery<User>({
     queryKey: ['creator', userId],
     queryFn: async () => {
-      return await api.creators.getCreatorProfile(userId!);
+      const response = await api.creators.getCreatorProfile(userId!);
+      return response as User;
     },
     enabled: !!userId,
   });
@@ -17,15 +18,17 @@ export default function CreatorProfilePage() {
   const { data: creatorContent, isLoading: contentLoading } = useQuery<Content[]>({
     queryKey: ['creator-content', userId],
     queryFn: async () => {
-      return await api.creators.getCreatorContent(userId!);
+      const response = await api.creators.getCreatorContent(userId!);
+      return response as Content[];
     },
     enabled: !!userId,
   });
 
-  const { data: creatorProducts, isLoading: productsLoading } = useQuery<Product[]>({
+  const { data: creatorProducts, isLoading: productsLoading} = useQuery<Product[]>({
     queryKey: ['creator-products', userId],
     queryFn: async () => {
-      return await api.creators.getCreatorProducts(userId!);
+      const response = await api.creators.getCreatorProducts(userId!);
+      return response as Product[];
     },
     enabled: !!userId,
   });
@@ -137,7 +140,7 @@ export default function CreatorProfilePage() {
             </div>
           ) : creatorProducts && creatorProducts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {creatorProducts.map((product) => (
+              {creatorProducts.map((product: Product) => (
                 <ProductCard key={product.productId} product={product} />
               ))}
             </div>
@@ -157,7 +160,7 @@ export default function CreatorProfilePage() {
             </div>
           ) : creatorContent && creatorContent.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {creatorContent.map((content) => (
+              {creatorContent.map((content: Content) => (
                 <ProductCard key={content.contentId} product={content} />
               ))}
             </div>

@@ -23,6 +23,7 @@ interface ItemDetails {
   title: string;
   description?: string;
   price?: number;
+  amount?: number;
   thumbnailUrl?: string;
   creatorName?: string;
 }
@@ -68,14 +69,17 @@ export default function PurchaseFlow({
     },
   });
 
-  const purchaseMutation = useMutation({
-    mutationFn: (paymentData: PaymentData) => {
+  const purchaseMutation = useMutation<PurchaseResult, Error, PaymentData>({
+    mutationFn: async (paymentData: PaymentData) => {
       if (contentId) {
-        return api.purchase.purchaseContent(contentId, paymentData);
+        const result = await api.purchase.purchaseContent(contentId, paymentData);
+        return result as PurchaseResult;
       } else if (productId) {
-        return api.purchase.purchaseProduct(productId, paymentData);
+        const result = await api.purchase.purchaseProduct(productId, paymentData);
+        return result as PurchaseResult;
       } else if (subscriptionPlan) {
-        return api.subscription.subscribe(subscriptionPlan, paymentData);
+        const result = await api.subscription.subscribe(subscriptionPlan, paymentData);
+        return result as PurchaseResult;
       }
       throw new Error('No item specified for purchase');
     },
@@ -209,7 +213,7 @@ export default function PurchaseFlow({
           </div>
         )}
 
-        {currentStep === 'confirmation' && (
+        {currentStep === 'confirmation' && purchaseResult && (
           <PurchaseConfirmation
             purchaseData={purchaseResult}
             itemDetails={itemDetails}

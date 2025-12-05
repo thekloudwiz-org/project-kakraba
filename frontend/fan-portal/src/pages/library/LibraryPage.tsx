@@ -9,14 +9,19 @@ export default function LibraryPage() {
   const [filter, setFilter] = useState<ContentFilter>('all');
   const [page, setPage] = useState(1);
 
-  const { data: library, isLoading } = useQuery<PaginatedResponse<Content> & { totalPages: number }>({
+  interface LibraryResponse extends PaginatedResponse<Content> {
+    totalPages: number;
+  }
+
+  const { data: library, isLoading } = useQuery<LibraryResponse>({
     queryKey: ['content-library', filter, page],
     queryFn: async () => {
-      return await api.library.getAccessibleContent({
+      const response = await api.library.getAccessibleContent({
         contentType: filter === 'all' ? undefined : filter,
         page,
         limit: 12,
       });
+      return response as LibraryResponse;
     },
   });
 
@@ -61,7 +66,7 @@ export default function LibraryPage() {
         ) : library && library.items.length > 0 ? (
           <div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {library.items.map((content) => (
+              {library.items.map((content: Content) => (
                 <ContentLibraryCard key={content.contentId} content={content} />
               ))}
             </div>

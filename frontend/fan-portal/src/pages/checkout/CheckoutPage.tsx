@@ -7,16 +7,40 @@ import { api, Spinner } from '@kakraba/shared';
 import CheckoutForm from '../../components/checkout/CheckoutForm';
 import PurchaseConfirmation from '../../components/purchase/PurchaseConfirmation';
 
-const stripePromise = loadStripe((import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY as string) || '');
+interface PaymentData {
+  paymentMethodId: string;
+  email: string;
+  name: string;
+}
+
+interface PurchaseResult {
+  orderId: string;
+  purchaseDate: string;
+  amount: number;
+  contentId?: string;
+  productId?: string;
+}
+
+interface ItemDetails {
+  title?: string;
+  name?: string;
+  description?: string;
+  thumbnailUrl?: string;
+  price?: number;
+  amount?: number;
+}
+
+const stripeKey = import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = loadStripe(typeof stripeKey === 'string' ? stripeKey : '');
 
 export default function CheckoutPage() {
   const { type, id } = useParams<{ type: string; id: string }>();
   const navigate = useNavigate();
   const [purchaseComplete, setPurchaseComplete] = useState(false);
-  const [purchaseData, setPurchaseData] = useState<unknown>(null);
+  const [purchaseData, setPurchaseData] = useState<PurchaseResult | null>(null);
 
   // Fetch item details
-  const { data: itemDetails, isLoading } = useQuery({
+  const { data: itemDetails, isLoading } = useQuery<ItemDetails>({
     queryKey: ['checkout-item', type, id],
     queryFn: async () => {
       if (type === 'product') {
@@ -32,8 +56,8 @@ export default function CheckoutPage() {
   });
 
   // Purchase mutation
-  const purchaseMutation = useMutation({
-    mutationFn: async (paymentData: { paymentMethodId: string; email: string; name: string }) => {
+  const purchaseMutation = useMutation<PurchaseResult, Error, PaymentData>({
+    mutationFn: async (paymentData: PaymentData) => {
       if (type === 'product') {
         return api.purchase.purchaseProduct(id!, paymentData);
       } else if (type === 'content') {
@@ -49,7 +73,7 @@ export default function CheckoutPage() {
     },
   });
 
-  const handlePaymentSubmit = async (paymentData: { paymentMethodId: string; email: string; name: string }) => {
+  const handlePaymentSubmit = async (paymentData: PaymentData) => {
     await purchaseMutation.mutateAsync(paymentData);
   };
 

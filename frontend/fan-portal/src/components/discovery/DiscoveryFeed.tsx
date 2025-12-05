@@ -9,32 +9,52 @@ import ProductCard from './ProductCard';
 type ViewMode = 'creators' | 'products' | 'content';
 
 interface Creator {
-  id: string;
+  userId: string;
+  id?: string;
   username: string;
-  displayName: string;
+  displayName?: string;
   avatarUrl?: string;
   bio?: string;
+  followerCount: number;
+  contentCount: number;
+  categories?: string[];
 }
 
 interface Product {
-  id: string;
+  productId?: string;
+  id?: string;
   title: string;
-  description: string;
-  price: number;
+  description?: string;
+  price?: number;
   thumbnailUrl?: string;
+  isSubscriptionContent?: boolean;
+  creatorName: string;
+  creatorAvatar?: string;
+  purchaseCount?: number;
 }
 
 interface Content {
-  id: string;
+  contentId?: string;
+  id?: string;
   title: string;
-  description: string;
+  description?: string;
   contentType: string;
   thumbnailUrl?: string;
+  price?: number;
+  creatorName: string;
+  creatorAvatar?: string;
 }
 
 interface FeaturedData {
   items: (Creator | Product | Content)[];
   total: number;
+}
+
+interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page?: number;
+  limit?: number;
 }
 
 interface SearchResults {
@@ -69,14 +89,14 @@ export default function DiscoveryFeed() {
     queryKey: ['search', viewMode, searchQuery, filters],
     queryFn: async () => {
       if (viewMode === 'creators') {
-        const result = await api.creators.searchCreators({ query: searchQuery, ...filters });
-        return result as SearchResults;
+        const result = await api.creators.searchCreators({ query: searchQuery, ...filters }) as PaginatedResponse<Creator>;
+        return { items: result.items, total: result.total };
       } else if (viewMode === 'products') {
-        const result = await api.product.listProducts({});
-        return result as SearchResults;
+        const result = await api.product.listProducts({}) as PaginatedResponse<Product>;
+        return { items: result.items, total: result.total };
       } else {
-        const result = await api.content.searchContent({ query: searchQuery, ...filters });
-        return result as SearchResults;
+        const result = await api.content.searchContent({ query: searchQuery, ...filters }) as PaginatedResponse<Content>;
+        return { items: result.items, total: result.total };
       }
     },
     enabled: searchQuery.length > 0,
@@ -151,9 +171,12 @@ export default function DiscoveryFeed() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {featuredData.items?.map((item: Creator | Product | Content) => {
                   if (viewMode === 'creators') {
-                    return <CreatorCard key={(item as Creator).id} creator={item as Creator} />;
+                    const creator = item as Creator;
+                    return <CreatorCard key={creator.userId || creator.id} creator={creator} />;
                   } else {
-                    return <ProductCard key={item.id} product={item as Product | Content} />;
+                    const product = item as Product | Content;
+                    const key = 'productId' in product ? product.productId : 'contentId' in product ? product.contentId : product.id;
+                    return <ProductCard key={key} product={product} />;
                   }
                 })}
               </div>
@@ -177,13 +200,16 @@ export default function DiscoveryFeed() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {searchResults?.items?.map((item: Creator | Product | Content) => (
-                    viewMode === 'creators' ? (
-                      <CreatorCard key={(item as Creator).id} creator={item as Creator} />
-                    ) : (
-                      <ProductCard key={item.id} product={item as Product | Content} />
-                    )
-                  ))}
+                  {searchResults?.items?.map((item: Creator | Product | Content) => {
+                    if (viewMode === 'creators') {
+                      const creator = item as Creator;
+                      return <CreatorCard key={creator.userId || creator.id} creator={creator} />;
+                    } else {
+                      const product = item as Product | Content;
+                      const key = 'productId' in product ? product.productId : 'contentId' in product ? product.contentId : product.id;
+                      return <ProductCard key={key} product={product} />;
+                    }
+                  })}
                 </div>
               )}
             </div>

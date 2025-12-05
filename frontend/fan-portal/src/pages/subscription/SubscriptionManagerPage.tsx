@@ -9,9 +9,10 @@ export default function SubscriptionManagerPage() {
   const { data: subscriptions, isLoading } = useQuery<Subscription[]>({
     queryKey: ['subscriptions', showCancelled],
     queryFn: async () => {
-      return await api.subscription.getSubscriptions({
+      const response = await api.subscription.getSubscriptions({
         status: showCancelled ? 'all' : 'active',
       });
+      return response as Subscription[];
     },
   });
 
@@ -56,7 +57,7 @@ export default function SubscriptionManagerPage() {
           </div>
         ) : subscriptions && subscriptions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {subscriptions.map((subscription) => (
+            {subscriptions.map((subscription: Subscription) => (
               <SubscriptionCard key={subscription.subscriptionId} subscription={subscription} />
             ))}
           </div>
