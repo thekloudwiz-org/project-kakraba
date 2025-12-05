@@ -58,7 +58,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       
       - name: Run linter
-        run: pnpm --filter ${{ matrix.package }} lint
+        run: pnpm --filter ${{ matrix.package }} lint -- --max-warnings 100
       
       - name: Type check
         run: pnpm --filter ${{ matrix.package }} type-check
