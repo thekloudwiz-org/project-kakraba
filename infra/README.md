@@ -249,3 +249,4 @@ The modules have the following dependencies:
 ## Support
 
 For issues or questions, refer to the main project documentation or contact the development team.
+# Infrastructure configured
