@@ -153,9 +153,10 @@ jobs:
       
       - name: Test Lambda function
         run: |
+          echo '{"body":"{\"product_id\":\"test-product\",\"user_id\":\"test-user\",\"intent\":\"STREAM\"}"}' > payload.json
           aws lambda invoke \
             --function-name ${{ steps.lambda.outputs.function-name }} \
-            --payload '{"body":"{\"product_id\":\"test-product\",\"user_id\":\"test-user\",\"intent\":\"STREAM\"}"}' \
+            --payload file://payload.json \
             response.json
           cat response.json
           echo "✅ Backend deployment successful!"
