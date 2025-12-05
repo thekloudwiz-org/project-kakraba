@@ -108,14 +108,14 @@ resource "aws_cloudwatch_dashboard" "business_metrics" {
       {
         type = "log"
         properties = {
-          query   = <<-EOT
+          query  = <<-EOT
             SOURCE '${var.log_group_prefix}'
             | fields @timestamp, @message
             | filter @message like /ERROR/
             | stats count() by bin(5m)
           EOT
-          region  = var.aws_region
-          title   = "Error Rate Over Time"
+          region = var.aws_region
+          title  = "Error Rate Over Time"
         }
       }
     ]

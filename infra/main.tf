@@ -135,11 +135,11 @@ module "acm_subdomains" {
     aws.us_east_1 = aws.us_east_1
   }
 
-  creator_domain  = var.creator_portal_domain
-  fan_domain      = var.fan_portal_domain
-  landing_domain  = var.landing_page_domain
-  zone_id         = data.aws_route53_zone.main[0].zone_id
-  tags            = local.common_tags
+  creator_domain = var.creator_portal_domain
+  fan_domain     = var.fan_portal_domain
+  landing_domain = var.landing_page_domain
+  zone_id        = data.aws_route53_zone.main[0].zone_id
+  tags           = local.common_tags
 }
 
 # Subdomain Web Hosting - Separate buckets for each portal
@@ -147,16 +147,16 @@ module "web_hosting_subdomains" {
   count  = var.use_subdomain_hosting && var.route53_zone_name != "" ? 1 : 0
   source = "./modules/web-hosting-subdomains"
 
-  project_name                 = local.project
-  environment                  = local.environment
-  creator_domain               = var.creator_portal_domain
-  fan_domain                   = var.fan_portal_domain
-  landing_domain               = var.landing_page_domain
-  creator_acm_certificate_arn  = module.acm_subdomains[0].creator_certificate_arn
-  fan_acm_certificate_arn      = module.acm_subdomains[0].fan_certificate_arn
-  landing_acm_certificate_arn  = module.acm_subdomains[0].landing_certificate_arn
-  route53_zone_id              = data.aws_route53_zone.main[0].zone_id
-  tags                         = local.common_tags
+  project_name                = local.project
+  environment                 = local.environment
+  creator_domain              = var.creator_portal_domain
+  fan_domain                  = var.fan_portal_domain
+  landing_domain              = var.landing_page_domain
+  creator_acm_certificate_arn = module.acm_subdomains[0].creator_certificate_arn
+  fan_acm_certificate_arn     = module.acm_subdomains[0].fan_certificate_arn
+  landing_acm_certificate_arn = module.acm_subdomains[0].landing_certificate_arn
+  route53_zone_id             = data.aws_route53_zone.main[0].zone_id
+  tags                        = local.common_tags
 }
 
 # Monitoring Module - CloudWatch dashboards and alarms

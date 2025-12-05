@@ -48,8 +48,8 @@ resource "aws_cloudfront_cache_policy" "optimized_caching" {
   name        = "${var.project_name}-${var.environment}-optimized-cache"
   comment     = "Optimized caching policy for static assets"
   min_ttl     = 0
-  default_ttl = 86400      # 24 hours
-  max_ttl     = 31536000   # 1 year
+  default_ttl = 86400    # 24 hours
+  max_ttl     = 31536000 # 1 year
 
   parameters_in_cache_key_and_forwarded_to_origin {
     cookies_config {
