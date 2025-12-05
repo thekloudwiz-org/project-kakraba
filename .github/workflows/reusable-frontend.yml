@@ -69,7 +69,7 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
-          files: frontend/packages/${{ matrix.package }}/coverage/coverage-final.json
+          files: frontend/${{ matrix.package }}/coverage/coverage-final.json
           flags: frontend-${{ matrix.package }}
           name: ${{ matrix.package }}-coverage
 
@@ -113,7 +113,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-${{ inputs.environment }}
+          role-to-assume: ${{ secrets.aws_role_arn }}
           aws-region: ${{ inputs.aws-region }}
       
       - name: Set deployment targets
