@@ -159,7 +159,7 @@ describe('Property 8: Content library displays all items', () => {
     cleanup();
   });
 
-  it.skip('should display all content items with required information', async () => {
+  it('should display all content items with required information', async () => {
     const testCases = [
       {
         items: [
@@ -209,16 +209,23 @@ describe('Property 8: Content library displays all items', () => {
         </TestWrapper>
       );
 
-      // Wait for content to load
-      await waitFor(() => {
-        const firstItemTitle = testCase.items[0]?.title;
-        if (firstItemTitle) {
-          expect(screen.queryByText(firstItemTitle)).toBeTruthy();
-        } else {
-          // If no items, just check that the component rendered
-          expect(screen.getByText(/Content Library|Upload/i)).toBeInTheDocument();
-        }
-      });
+      // Wait for loading to complete
+      await waitFor(
+        () => {
+          expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
+
+      // Then verify first item is displayed
+      if (testCase.items.length > 0) {
+        await waitFor(
+          () => {
+            expect(screen.getByText(testCase.items[0].title)).toBeInTheDocument();
+          },
+          { timeout: 3000 }
+        );
+      }
 
       // Verify all items are displayed
       testCase.items.forEach((item) => {

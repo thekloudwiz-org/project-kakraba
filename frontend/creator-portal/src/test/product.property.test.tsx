@@ -195,7 +195,7 @@ describe('Property 14: Product save creates complete record', () => {
     }
   });
 
-  it.skip('should display products in catalog with all details', async () => {
+  it('should display products in catalog with all details', async () => {
     const mockProducts = [
       {
         productId: '1',
@@ -236,16 +236,21 @@ describe('Property 14: Product save creates complete record', () => {
       </TestWrapper>
     );
 
-    // Wait for products to load
-    await waitFor(() => {
-      const firstProductTitle = mockProducts[0]?.title;
-      if (firstProductTitle) {
-        expect(screen.getByText(firstProductTitle)).toBeInTheDocument();
-      } else {
-        // If no products, just check that the component rendered
-        expect(screen.getByText(/Product Catalog|Create Product/i)).toBeInTheDocument();
-      }
-    });
+    // Wait for products to load - check for loading state to disappear first
+    await waitFor(
+      () => {
+        expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
+
+    // Then verify first product is displayed
+    await waitFor(
+      () => {
+        expect(screen.getByText('Product 1')).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
     // Verify all products are displayed
     mockProducts.forEach((product) => {
