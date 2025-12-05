@@ -1,0 +1,21 @@
+name: Stg - Terraform
+
+on:
+  push:
+    branches: [stg]
+    paths:
+      - 'infra/**'
+      - '.github/workflows/stg-terraform.yml'
+      - '.github/workflows/reusable-terraform.yml'
+
+jobs:
+  terraform:
+    name: Terraform - Staging
+    uses: ./.github/workflows/reusable-terraform.yml
+    with:
+      environment: stg
+      aws-region: eu-central-1
+      terraform-version: '1.6.0'
+      run-validation: false
+      tfvars-file: stg.tfvars
+    secrets: inherit

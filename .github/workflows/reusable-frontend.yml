@@ -1,0 +1,237 @@
+name: Reusable Frontend Workflow
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: 'Environment: dev, stg, or prod'
+      aws-region:
+        required: false
+        type: string
+        default: 'eu-central-1'
+      node-version:
+        required: false
+        type: string
+        default: '20'
+      run-tests:
+        required: false
+        type: boolean
+        default: false
+        description: 'Whether to run tests (dev only)'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    if: inputs.run-tests
+    strategy:
+      matrix:
+        package: [landing-page, creator-portal, fan-portal]
+    
+    defaults:
+      run:
+        working-directory: frontend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linter
+        run: npm run lint --workspace=${{ matrix.package }}
+      
+      - name: Type check
+        run: npm run type-check --workspace=${{ matrix.package }}
+      
+      - name: Run tests
+        run: npm test --workspace=${{ matrix.package }} -- --coverage
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: frontend/packages/${{ matrix.package }}/coverage/coverage-final.json
+          flags: frontend-${{ matrix.package }}
+          name: ${{ matrix.package }}-coverage
+
+  deploy:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
+    environment: ${{ inputs.environment }}
+    strategy:
+      matrix:
+        package: [landing-page, creator-portal, fan-portal]
+        include:
+          - package: landing-page
+            s3-path: ''
+          - package: creator-portal
+            s3-path: 'creator/'
+          - package: fan-portal
+            s3-path: 'fan/'
+    
+    defaults:
+      run:
+        working-directory: frontend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-${{ inputs.environment }}
+          aws-region: ${{ inputs.aws-region }}
+      
+      - name: Set deployment targets
+        id: targets
+        env:
+          S3_BUCKET_DEV: ${{ vars.S3_BUCKET_DEV }}
+          S3_BUCKET_STG: ${{ vars.S3_BUCKET_STG }}
+          S3_BUCKET_PROD: ${{ vars.S3_BUCKET_PROD }}
+          CLOUDFRONT_ID_DEV: ${{ vars.CLOUDFRONT_ID_DEV }}
+          CLOUDFRONT_ID_STG: ${{ vars.CLOUDFRONT_ID_STG }}
+          CLOUDFRONT_ID_PROD: ${{ vars.CLOUDFRONT_ID_PROD }}
+        run: |
+          case "${{ inputs.environment }}" in
+            dev)
+              S3_BUCKET="$S3_BUCKET_DEV"
+              CLOUDFRONT_ID="$CLOUDFRONT_ID_DEV"
+              ;;
+            stg)
+              S3_BUCKET="$S3_BUCKET_STG"
+              CLOUDFRONT_ID="$CLOUDFRONT_ID_STG"
+              ;;
+            prod)
+              S3_BUCKET="$S3_BUCKET_PROD"
+              CLOUDFRONT_ID="$CLOUDFRONT_ID_PROD"
+              ;;
+            *)
+              echo "❌ Unknown environment: ${{ inputs.environment }}"
+              exit 1
+              ;;
+          esac
+          
+          if [ -z "$S3_BUCKET" ] || [ -z "$CLOUDFRONT_ID" ]; then
+            echo "❌ S3 bucket or CloudFront ID not found in variables for environment: ${{ inputs.environment }}"
+            exit 1
+          fi
+          
+          echo "s3-bucket=$S3_BUCKET" >> $GITHUB_OUTPUT
+          echo "cloudfront-id=$CLOUDFRONT_ID" >> $GITHUB_OUTPUT
+          echo "Using S3 bucket: $S3_BUCKET"
+          echo "Using CloudFront ID: $CLOUDFRONT_ID"
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build application
+        env:
+          VITE_API_ENDPOINT_DEV: ${{ secrets.VITE_API_ENDPOINT_DEV }}
+          VITE_API_ENDPOINT_STG: ${{ secrets.VITE_API_ENDPOINT_STG }}
+          VITE_API_ENDPOINT_PROD: ${{ secrets.VITE_API_ENDPOINT_PROD }}
+          VITE_COGNITO_USER_POOL_ID_DEV: ${{ secrets.VITE_COGNITO_USER_POOL_ID_DEV }}
+          VITE_COGNITO_USER_POOL_ID_STG: ${{ secrets.VITE_COGNITO_USER_POOL_ID_STG }}
+          VITE_COGNITO_USER_POOL_ID_PROD: ${{ secrets.VITE_COGNITO_USER_POOL_ID_PROD }}
+          VITE_COGNITO_CLIENT_ID_DEV: ${{ secrets.VITE_COGNITO_CLIENT_ID_DEV }}
+          VITE_COGNITO_CLIENT_ID_STG: ${{ secrets.VITE_COGNITO_CLIENT_ID_STG }}
+          VITE_COGNITO_CLIENT_ID_PROD: ${{ secrets.VITE_COGNITO_CLIENT_ID_PROD }}
+          VITE_COGNITO_DOMAIN_DEV: ${{ secrets.VITE_COGNITO_DOMAIN_DEV }}
+          VITE_COGNITO_DOMAIN_STG: ${{ secrets.VITE_COGNITO_DOMAIN_STG }}
+          VITE_COGNITO_DOMAIN_PROD: ${{ secrets.VITE_COGNITO_DOMAIN_PROD }}
+          VITE_STRIPE_PUBLISHABLE_KEY_TEST: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY_TEST }}
+          VITE_STRIPE_PUBLISHABLE_KEY_LIVE: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY_LIVE }}
+        run: |
+          case "${{ inputs.environment }}" in
+            dev)
+              export VITE_API_ENDPOINT="$VITE_API_ENDPOINT_DEV"
+              export VITE_COGNITO_USER_POOL_ID="$VITE_COGNITO_USER_POOL_ID_DEV"
+              export VITE_COGNITO_CLIENT_ID="$VITE_COGNITO_CLIENT_ID_DEV"
+              export VITE_COGNITO_DOMAIN="$VITE_COGNITO_DOMAIN_DEV"
+              export VITE_STRIPE_PUBLISHABLE_KEY="$VITE_STRIPE_PUBLISHABLE_KEY_TEST"
+              ;;
+            stg)
+              export VITE_API_ENDPOINT="$VITE_API_ENDPOINT_STG"
+              export VITE_COGNITO_USER_POOL_ID="$VITE_COGNITO_USER_POOL_ID_STG"
+              export VITE_COGNITO_CLIENT_ID="$VITE_COGNITO_CLIENT_ID_STG"
+              export VITE_COGNITO_DOMAIN="$VITE_COGNITO_DOMAIN_STG"
+              export VITE_STRIPE_PUBLISHABLE_KEY="$VITE_STRIPE_PUBLISHABLE_KEY_TEST"
+              ;;
+            prod)
+              export VITE_API_ENDPOINT="$VITE_API_ENDPOINT_PROD"
+              export VITE_COGNITO_USER_POOL_ID="$VITE_COGNITO_USER_POOL_ID_PROD"
+              export VITE_COGNITO_CLIENT_ID="$VITE_COGNITO_CLIENT_ID_PROD"
+              export VITE_COGNITO_DOMAIN="$VITE_COGNITO_DOMAIN_PROD"
+              export VITE_STRIPE_PUBLISHABLE_KEY="$VITE_STRIPE_PUBLISHABLE_KEY_LIVE"
+              ;;
+          esac
+          
+          npm run build --workspace=${{ matrix.package }}
+      
+      - name: Deploy to S3
+        run: |
+          aws s3 sync packages/${{ matrix.package }}/dist/ \
+            s3://${{ steps.targets.outputs.s3-bucket }}/${{ matrix.s3-path }} \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "index.html"
+          
+          # Upload index.html with no-cache
+          aws s3 cp packages/${{ matrix.package }}/dist/index.html \
+            s3://${{ steps.targets.outputs.s3-bucket }}/${{ matrix.s3-path }}index.html \
+            --cache-control "no-cache, no-store, must-revalidate"
+      
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.targets.outputs.cloudfront-id }} \
+            --paths "/${{ matrix.s3-path }}*"
+
+  smoke-test:
+    name: Smoke Test Frontend
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    
+    steps:
+      - name: Test website availability
+        env:
+          WEBSITE_URL: ${{ vars.WEBSITE_URL }}
+        run: |
+          if [ -z "$WEBSITE_URL" ]; then
+            echo "❌ Website URL not found in variables"
+            exit 1
+          fi
+          
+          for path in "" "/creator" "/fan"; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$WEBSITE_URL$path" || echo "000")
+            echo "Testing $WEBSITE_URL$path - HTTP $HTTP_CODE"
+            if [ "$HTTP_CODE" != "200" ]; then
+              echo "❌ Health check failed for $path"
+              exit 1
+            fi
+          done
+          
+          echo "✅ All frontend health checks passed!"

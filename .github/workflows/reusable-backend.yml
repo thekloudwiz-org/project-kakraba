@@ -1,0 +1,161 @@
+name: Reusable Backend Workflow
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: 'Environment: dev, stg, or prod'
+      aws-region:
+        required: false
+        type: string
+        default: 'eu-central-1'
+      node-version:
+        required: false
+        type: string
+        default: '20'
+      run-tests:
+        required: false
+        type: boolean
+        default: false
+        description: 'Whether to run tests (dev only)'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    if: inputs.run-tests
+    
+    defaults:
+      run:
+        working-directory: app
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Type check
+        run: npm run type-check
+      
+      - name: Run tests
+        run: npm test -- --coverage
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: app/coverage/coverage-final.json
+          flags: backend
+          name: backend-coverage
+
+  build-and-deploy:
+    name: Build and Deploy Backend
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
+    environment: ${{ inputs.environment }}
+    
+    defaults:
+      run:
+        working-directory: app
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-${{ inputs.environment }}
+          aws-region: ${{ inputs.aws-region }}
+      
+      - name: Install dependencies
+        run: npm ci --production
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Create Lambda package
+        run: zip -r lambda.zip dist/ node_modules/ package.json
+      
+      - name: Set Lambda function name
+        id: lambda
+        env:
+          FUNCTION_NAME_DEV: ${{ vars.LAMBDA_FUNCTION_NAME_DEV }}
+          FUNCTION_NAME_STG: ${{ vars.LAMBDA_FUNCTION_NAME_STG }}
+          FUNCTION_NAME_PROD: ${{ vars.LAMBDA_FUNCTION_NAME_PROD }}
+        run: |
+          case "${{ inputs.environment }}" in
+            dev)
+              FUNCTION_NAME="$FUNCTION_NAME_DEV"
+              ;;
+            stg)
+              FUNCTION_NAME="$FUNCTION_NAME_STG"
+              ;;
+            prod)
+              FUNCTION_NAME="$FUNCTION_NAME_PROD"
+              ;;
+            *)
+              echo "❌ Unknown environment: ${{ inputs.environment }}"
+              exit 1
+              ;;
+          esac
+          
+          if [ -z "$FUNCTION_NAME" ]; then
+            echo "❌ Lambda function name not found in variables for environment: ${{ inputs.environment }}"
+            exit 1
+          fi
+          
+          echo "function-name=$FUNCTION_NAME" >> $GITHUB_OUTPUT
+          echo "Using Lambda function: $FUNCTION_NAME"
+      
+      - name: Deploy to Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ steps.lambda.outputs.function-name }} \
+            --zip-file fileb://lambda.zip
+      
+      - name: Wait for Lambda update
+        run: |
+          aws lambda wait function-updated \
+            --function-name ${{ steps.lambda.outputs.function-name }}
+      
+      - name: Publish Lambda version (production only)
+        if: inputs.environment == 'prod'
+        run: |
+          aws lambda publish-version \
+            --function-name ${{ steps.lambda.outputs.function-name }} \
+            --description "Deployed via GitHub Actions - ${{ github.sha }}"
+      
+      - name: Test Lambda function
+        run: |
+          aws lambda invoke \
+            --function-name ${{ steps.lambda.outputs.function-name }} \
+            --payload '{"httpMethod":"GET","path":"/health"}' \
+            response.json
+          cat response.json
+          echo "✅ Backend deployment successful!"

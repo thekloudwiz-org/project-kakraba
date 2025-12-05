@@ -1,0 +1,20 @@
+name: Prod - Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - '.github/workflows/prod-backend.yml'
+      - '.github/workflows/reusable-backend.yml'
+
+jobs:
+  backend:
+    name: Backend - Production
+    uses: ./.github/workflows/reusable-backend.yml
+    with:
+      environment: prod
+      aws-region: eu-central-1
+      node-version: '20'
+      run-tests: false
+    secrets: inherit

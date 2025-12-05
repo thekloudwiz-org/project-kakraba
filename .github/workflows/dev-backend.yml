@@ -1,0 +1,26 @@
+name: Dev - Backend
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'app/**'
+      - '.github/workflows/dev-backend.yml'
+      - '.github/workflows/reusable-backend.yml'
+  pull_request:
+    branches: [dev]
+    paths:
+      - 'app/**'
+      - '.github/workflows/dev-backend.yml'
+      - '.github/workflows/reusable-backend.yml'
+
+jobs:
+  backend:
+    name: Backend - Dev
+    uses: ./.github/workflows/reusable-backend.yml
+    with:
+      environment: dev
+      aws-region: eu-central-1
+      node-version: '20'
+      run-tests: true
+    secrets: inherit

@@ -1,0 +1,21 @@
+name: Prod - Terraform
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/**'
+      - '.github/workflows/prod-terraform.yml'
+      - '.github/workflows/reusable-terraform.yml'
+
+jobs:
+  terraform:
+    name: Terraform - Production
+    uses: ./.github/workflows/reusable-terraform.yml
+    with:
+      environment: prod
+      aws-region: eu-central-1
+      terraform-version: '1.6.0'
+      run-validation: false
+      tfvars-file: prod.tfvars
+    secrets: inherit

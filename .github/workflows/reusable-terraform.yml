@@ -1,0 +1,182 @@
+name: Reusable Terraform Workflow
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: 'Environment: dev, stg, or prod'
+      aws-region:
+        required: false
+        type: string
+        default: 'eu-central-1'
+      terraform-version:
+        required: false
+        type: string
+        default: '1.6.0'
+      run-validation:
+        required: false
+        type: boolean
+        default: false
+        description: 'Whether to run fmt/validate (dev only)'
+      tfvars-file:
+        required: true
+        type: string
+        description: 'Terraform variables file (e.g., dev.tfvars)'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Terraform
+    runs-on: ubuntu-latest
+    if: inputs.run-validation
+    
+    defaults:
+      run:
+        working-directory: infra
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.terraform-version }}
+      
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+      
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="key=project-kakraba/${{ inputs.environment }}-tf.state"
+      
+      - name: Terraform Validate
+        run: terraform validate
+      
+      - name: Setup tflint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+      
+      - name: Initialize tflint
+        run: tflint --init
+      
+      - name: Run tflint
+        run: tflint -f compact
+
+  deploy:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    needs: [validate]
+    if: always() && (needs.validate.result == 'success' || needs.validate.result == 'skipped')
+    environment: ${{ inputs.environment }}
+    outputs:
+      terraform-outputs: ${{ steps.output.outputs.json }}
+    
+    defaults:
+      run:
+        working-directory: infra
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.terraform-version }}
+          terraform_wrapper: false
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-${{ inputs.environment }}
+          aws-region: ${{ inputs.aws-region }}
+      
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="key=project-kakraba/${{ inputs.environment }}-tf.state"
+      
+      - name: Terraform Plan
+        if: inputs.run-validation
+        run: |
+          terraform plan \
+            -var-file="environments/${{ inputs.tfvars-file }}" \
+            -out=tfplan
+      
+      - name: Terraform Apply
+        run: |
+          if [ -f "tfplan" ]; then
+            terraform apply -auto-approve tfplan
+          else
+            terraform apply -auto-approve -var-file="environments/${{ inputs.tfvars-file }}"
+          fi
+      
+      - name: Terraform Output
+        id: output
+        run: |
+          OUTPUT=$(terraform output -json)
+          echo "json=$OUTPUT" >> $GITHUB_OUTPUT
+          echo "$OUTPUT" > outputs.json
+      
+      - name: Upload Terraform outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-outputs-${{ inputs.environment }}
+          path: infra/outputs.json
+          retention-days: 7
+      
+      - name: Display outputs
+        run: |
+          echo "📦 Infrastructure Outputs:"
+          terraform output
+          echo "✅ Infrastructure deployment successful!"
+  
+  update-secrets:
+    name: Update GitHub Secrets
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    if: success()
+    
+    defaults:
+      run:
+        working-directory: infra
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.terraform-version }}
+          terraform_wrapper: false
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-${{ inputs.environment }}
+          aws-region: ${{ inputs.aws-region }}
+      
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="key=project-kakraba/${{ inputs.environment }}-tf.state"
+      
+      - name: Update GitHub Secrets
+        env:
+          # Use PAT_TOKEN if available (has secrets write permission)
+          # Otherwise fall back to GITHUB_TOKEN (will fail but won't block deployment)
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          chmod +x scripts/update-github-secrets.sh
+          ./scripts/update-github-secrets.sh ${{ inputs.environment }} .
+        continue-on-error: true

@@ -1,0 +1,26 @@
+name: Dev - Frontend
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/dev-frontend.yml'
+      - '.github/workflows/reusable-frontend.yml'
+  pull_request:
+    branches: [dev]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/dev-frontend.yml'
+      - '.github/workflows/reusable-frontend.yml'
+
+jobs:
+  frontend:
+    name: Frontend - Dev
+    uses: ./.github/workflows/reusable-frontend.yml
+    with:
+      environment: dev
+      aws-region: eu-central-1
+      node-version: '20'
+      run-tests: true
+    secrets: inherit

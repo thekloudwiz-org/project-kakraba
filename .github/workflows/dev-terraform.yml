@@ -1,0 +1,27 @@
+name: Dev - Terraform
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'infra/**'
+      - '.github/workflows/dev-terraform.yml'
+      - '.github/workflows/reusable-terraform.yml'
+  pull_request:
+    branches: [dev]
+    paths:
+      - 'infra/**'
+      - '.github/workflows/dev-terraform.yml'
+      - '.github/workflows/reusable-terraform.yml'
+
+jobs:
+  terraform:
+    name: Terraform - Dev
+    uses: ./.github/workflows/reusable-terraform.yml
+    with:
+      environment: dev
+      aws-region: eu-central-1
+      terraform-version: '1.6.0'
+      run-validation: true
+      tfvars-file: dev.tfvars
+    secrets: inherit
