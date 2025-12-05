@@ -57,13 +57,13 @@ export default function PurchaseFlow({
     queryFn: async (): Promise<ItemDetails> => {
       if (contentId) {
         const result = await api.content.getContent(contentId);
-        return { ...(result as any), id: contentId } as ItemDetails;
+        return { ...(result as Partial<ItemDetails>), id: contentId } as ItemDetails;
       } else if (productId) {
         const result = await api.product.getProduct(productId);
-        return { ...(result as any), id: productId } as ItemDetails;
+        return { ...(result as Partial<ItemDetails>), id: productId } as ItemDetails;
       } else if (subscriptionPlan) {
         const result = await api.subscription.getPlanDetails(subscriptionPlan);
-        return { ...(result as any), id: subscriptionPlan } as ItemDetails;
+        return { ...(result as Partial<ItemDetails>), id: subscriptionPlan } as ItemDetails;
       }
       throw new Error('No item specified for purchase');
     },
