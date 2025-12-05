@@ -9,7 +9,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "package": "./scripts/package-lambda.sh",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "type-check": "tsc --noEmit"
   },
   "keywords": [
     "lambda",
