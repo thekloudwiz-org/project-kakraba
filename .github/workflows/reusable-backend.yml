@@ -155,7 +155,7 @@ jobs:
         run: |
           aws lambda invoke \
             --function-name ${{ steps.lambda.outputs.function-name }} \
-            --payload '{"httpMethod":"GET","path":"/health"}' \
+            --payload '{"body":"{\"product_id\":\"test-product\",\"user_id\":\"test-user\",\"intent\":\"STREAM\"}"}' \
             response.json
           cat response.json
           echo "✅ Backend deployment successful!"
