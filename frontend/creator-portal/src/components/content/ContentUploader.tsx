@@ -44,7 +44,7 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
     return null;
   };
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = useCallback(async (file: File) => {
     const uploadId = `${file.name}-${Date.now()}`;
     
     // Add to uploads map
@@ -145,7 +145,7 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
         return newMap;
       });
     }
-  };
+  }, [onUploadComplete]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     for (const file of acceptedFiles) {
