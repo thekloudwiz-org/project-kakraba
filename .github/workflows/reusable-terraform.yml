@@ -51,26 +51,11 @@ jobs:
       - name: Terraform Format Check
         run: terraform fmt -recursive
       
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ inputs.aws-region }}
-      
-      - name: Verify AWS credentials
-        run: |
-          echo "AWS Account ID: $(aws sts get-caller-identity --query Account --output text)"
-          echo "AWS User/Role: $(aws sts get-caller-identity --query Arn --output text)"
-          echo "Testing S3 bucket access..."
-          aws s3 ls s3://thekloudwiz-tf-state-bucket/ || echo "Cannot access S3 bucket"
-      
-      - name: Terraform Init
-        run: |
-          terraform init \
-            -backend-config="key=project-kakraba/${{ inputs.environment }}-tf.state"
+      - name: Terraform Init (without backend)
+        run: terraform init -backend=false
       
       - name: Terraform Validate
-        run: terraform validate 2>&1 | tee validate.log || (cat validate.log && exit 1)
+        run: terraform validate
       
       - name: Setup tflint
         uses: terraform-linters/setup-tflint@v4
