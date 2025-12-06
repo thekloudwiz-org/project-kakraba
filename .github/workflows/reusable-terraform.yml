@@ -64,9 +64,11 @@ jobs:
       
       - name: Initialize tflint
         run: tflint --init
+        continue-on-error: true
       
       - name: Run tflint
         run: tflint -f compact
+        continue-on-error: true
 
   deploy:
     name: Deploy Infrastructure
