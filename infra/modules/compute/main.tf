@@ -30,6 +30,14 @@ resource "aws_lambda_function" "access_control" {
       Name = "${var.project_name}-${var.environment}-access-control"
     }
   )
+
+  # Ignore source_code_hash changes since Lambda is deployed via CI/CD
+  lifecycle {
+    ignore_changes = [
+      source_code_hash,
+      last_modified
+    ]
+  }
 }
 
 # CloudWatch Log Group for Lambda logs

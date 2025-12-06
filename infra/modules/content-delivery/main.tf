@@ -157,6 +157,9 @@ resource "aws_cloudfront_distribution" "content" {
       Name = "${var.project_name}-${var.environment}-cdn"
     }
   )
+
+  # Wait for deployment to complete before marking as successful
+  wait_for_deployment = true
 }
 
 
