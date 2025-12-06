@@ -183,3 +183,21 @@ pnpm test:e2e:ui
 - [ ] All 114 tests passing
 - [ ] Full E2E coverage
 - [ ] Automated test data seeding
+
+
+---
+
+## Test Run Results (Latest)
+
+**Smoke Tests:** ✅ 8/8 passing (Landing Page)
+
+**Auth Tests:** ❌ 0/18 passing
+- Issue: Input elements don't have `name` attributes
+- Root cause: Input component from shared package not forwarding react-hook-form props
+- Fix needed: Update Input component to properly forward all props including `name`
+
+**Action Items:**
+1. Fix shared Input component to forward props
+2. Apply Terraform to add Cognito custom attributes
+3. Recreate test users with userType
+4. Re-run auth tests
