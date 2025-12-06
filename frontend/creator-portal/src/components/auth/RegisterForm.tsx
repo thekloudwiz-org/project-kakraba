@@ -69,6 +69,7 @@ export default function RegisterForm() {
             </label>
             <Input
               id="email"
+              name="email"
               type="email"
               {...register('email')}
               placeholder="creator@example.com"
@@ -85,6 +86,7 @@ export default function RegisterForm() {
             </label>
             <Input
               id="displayName"
+              name="displayName"
               type="text"
               {...register('displayName')}
               placeholder="Your Creator Name"
@@ -101,6 +103,7 @@ export default function RegisterForm() {
             </label>
             <textarea
               id="bio"
+              name="bio"
               {...register('bio')}
               placeholder="Tell your fans about yourself..."
               rows={3}
@@ -117,6 +120,7 @@ export default function RegisterForm() {
             </label>
             <Input
               id="password"
+              name="password"
               type="password"
               {...register('password')}
               placeholder="••••••••"

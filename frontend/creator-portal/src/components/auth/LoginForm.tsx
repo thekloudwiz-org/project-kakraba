@@ -56,6 +56,7 @@ export default function LoginForm() {
             </label>
             <Input
               id="email"
+              name="email"
               type="email"
               {...register('email')}
               placeholder="creator@example.com"
@@ -72,6 +73,7 @@ export default function LoginForm() {
             </label>
             <Input
               id="password"
+              name="password"
               type="password"
               {...register('password')}
               placeholder="••••••••"
