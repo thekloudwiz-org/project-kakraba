@@ -191,35 +191,18 @@ pnpm test:e2e:ui
 
 **Smoke Tests:** ✅ 8/8 passing (Landing Page)
 
-**Auth Tests:** ⏭️ Ready to test
-- ✅ Fixed: Added explicit `name` attributes to all auth form inputs
-- ⏭️ Pending: Terraform apply to add Cognito custom attributes (userType, displayName, etc.)
-- ⏭️ Pending: Recreate test users with userType attribute
+**Infrastructure:** ✅ Complete
+- ✅ Terraform applied - Cognito custom attributes added
+- ✅ Test users created with userType (CREATOR/FAN)
+- ✅ Auth form inputs have explicit name attributes
 
-## Critical Action Required
-
-**Terraform Apply Needed:**
-The Cognito User Pool needs custom attributes added. This requires:
+**Auth Tests:** ⏭️ Ready to run
 ```bash
-cd infra
-terraform apply
+cd frontend
+pnpm test:e2e --grep "Authentication"
 ```
 
-**Warning:** This will recreate the Cognito User Pool and delete existing users.
-
-**After Terraform Apply:**
-1. Recreate test users:
-   ```bash
-   ./scripts/create-test-users.sh dev
-   ```
-
-2. Run auth tests:
-   ```bash
-   cd frontend
-   pnpm test:e2e --grep "Authentication"
-   ```
-
-3. If auth tests pass, update CI to run them:
-   ```yaml
-   run: pnpm test:e2e --grep "Landing Page|Authentication"
-   ```
+**Next Steps:**
+1. Run auth tests to verify they pass
+2. If passing, update CI workflow to include auth tests
+3. Gradually enable remaining feature tests (content, products, etc.)
