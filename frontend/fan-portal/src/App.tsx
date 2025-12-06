@@ -9,6 +9,13 @@ const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 const PasswordResetPage = lazy(() => import('./pages/auth/PasswordResetPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const LibraryPage = lazy(() => import('./pages/library/LibraryPage'));
+const CheckoutPage = lazy(() => import('./pages/checkout/CheckoutPage'));
+const CreatorProfilePage = lazy(() => import('./pages/creator/CreatorProfilePage'));
+const ProductDetailPage = lazy(() => import('./pages/product/ProductDetailPage'));
+const SubscriptionManagerPage = lazy(() => import('./pages/subscription/SubscriptionManagerPage'));
+const PurchaseHistoryPage = lazy(() => import('./pages/PurchaseHistoryPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 const queryClient = new QueryClient();
 
@@ -31,6 +38,14 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/reset-password" element={<PasswordResetPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/discover" element={<HomePage />} />
+              <Route path="/library" element={<LibraryPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/creator/:id" element={<CreatorProfilePage />} />
+              <Route path="/product/:id" element={<ProductDetailPage />} />
+              <Route path="/subscriptions" element={<SubscriptionManagerPage />} />
+              <Route path="/purchases" element={<PurchaseHistoryPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
             </Routes>
           </Suspense>
         </BrowserRouter>

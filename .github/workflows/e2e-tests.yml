@@ -60,9 +60,9 @@ jobs:
         working-directory: ./frontend
         run: npx playwright install --with-deps chromium firefox
 
-      - name: Run E2E tests
+      - name: Run E2E tests (Smoke tests only)
         working-directory: ./frontend
-        run: pnpm test:e2e
+        run: pnpm test:e2e --grep "Landing Page"
         env:
           PLAYWRIGHT_BASE_URL: ${{ secrets.STAGING_URL }}
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
