@@ -96,7 +96,10 @@ jobs:
     name: Deploy Infrastructure
     runs-on: ubuntu-latest
     needs: [security-scan, validate]
-    if: always() && (needs.validate.result == 'success' || needs.validate.result == 'skipped') && needs.security-scan.result == 'success'
+    if: |
+      always() &&
+      (needs.validate.result == 'success' || needs.validate.result == 'skipped') &&
+      (needs.security-scan.result == 'success')
     environment: ${{ inputs.environment }}
     outputs:
       terraform-outputs: ${{ steps.output.outputs.json }}
