@@ -139,9 +139,10 @@ resource "aws_cloudfront_distribution" "content" {
   }
 
   # SSL/TLS certificate
+  # Note: When using cloudfront_default_certificate, AWS manages minimum_protocol_version
+  # and does not allow custom values. To use TLSv1.2_2021, you must use a custom ACM certificate.
   viewer_certificate {
     cloudfront_default_certificate = true
-    minimum_protocol_version       = "TLSv1.2_2021"
   }
 
   # Access logging to dedicated S3 bucket
@@ -160,13 +161,6 @@ resource "aws_cloudfront_distribution" "content" {
 
   # Wait for deployment to complete before marking as successful
   wait_for_deployment = true
-
-  # Ignore viewer_certificate changes since AWS manages this for default certificate
-  lifecycle {
-    ignore_changes = [
-      viewer_certificate[0].minimum_protocol_version
-    ]
-  }
 }
 
 
