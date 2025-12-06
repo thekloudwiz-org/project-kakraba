@@ -31,9 +31,10 @@ resource "aws_lambda_function" "access_control" {
     }
   )
 
-  # Ignore source_code_hash changes since Lambda is deployed via CI/CD
+  # Ignore code changes since Lambda is deployed via CI/CD
   lifecycle {
     ignore_changes = [
+      filename,
       source_code_hash
     ]
   }

@@ -160,6 +160,13 @@ resource "aws_cloudfront_distribution" "content" {
 
   # Wait for deployment to complete before marking as successful
   wait_for_deployment = true
+
+  # Ignore viewer_certificate changes since AWS manages this for default certificate
+  lifecycle {
+    ignore_changes = [
+      viewer_certificate[0].minimum_protocol_version
+    ]
+  }
 }
 
 
