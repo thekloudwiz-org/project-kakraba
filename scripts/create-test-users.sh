@@ -41,8 +41,9 @@ create_user() {
     local email=$1
     local password=$2
     local name=$3
+    local user_type=$4
     
-    echo "Creating user: $email"
+    echo "Creating user: $email (Type: $user_type)"
     
     # Check if user already exists
     if aws cognito-idp admin-get-user \
@@ -63,6 +64,8 @@ create_user() {
         --user-attributes \
             Name=email,Value="$email" \
             Name=email_verified,Value=true \
+            Name=custom:userType,Value="$user_type" \
+            Name=custom:displayName,Value="$name" \
         --message-action SUPPRESS \
         --region eu-central-1
     
@@ -78,10 +81,10 @@ create_user() {
 }
 
 # Create test creator
-create_user "$CREATOR_EMAIL" "$CREATOR_PASSWORD" "$CREATOR_NAME"
+create_user "$CREATOR_EMAIL" "$CREATOR_PASSWORD" "$CREATOR_NAME" "CREATOR"
 
 # Create test fan
-create_user "$FAN_EMAIL" "$FAN_PASSWORD" "$FAN_NAME"
+create_user "$FAN_EMAIL" "$FAN_PASSWORD" "$FAN_NAME" "FAN"
 
 echo ""
 echo "✅ Test users created successfully!"

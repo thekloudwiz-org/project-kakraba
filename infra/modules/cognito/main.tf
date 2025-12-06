@@ -25,6 +25,62 @@ resource "aws_cognito_user_pool" "main" {
     }
   }
 
+  # Custom attributes for user type (CREATOR or FAN)
+  schema {
+    name                = "userType"
+    attribute_data_type = "String"
+    mutable             = true
+
+    string_attribute_constraints {
+      min_length = 1
+      max_length = 20
+    }
+  }
+
+  schema {
+    name                = "username"
+    attribute_data_type = "String"
+    mutable             = true
+
+    string_attribute_constraints {
+      min_length = 1
+      max_length = 100
+    }
+  }
+
+  schema {
+    name                = "firstName"
+    attribute_data_type = "String"
+    mutable             = true
+
+    string_attribute_constraints {
+      min_length = 1
+      max_length = 100
+    }
+  }
+
+  schema {
+    name                = "lastName"
+    attribute_data_type = "String"
+    mutable             = true
+
+    string_attribute_constraints {
+      min_length = 1
+      max_length = 100
+    }
+  }
+
+  schema {
+    name                = "displayName"
+    attribute_data_type = "String"
+    mutable             = true
+
+    string_attribute_constraints {
+      min_length = 1
+      max_length = 100
+    }
+  }
+
   # Auto-verified attributes
   auto_verified_attributes = ["email"]
 
@@ -98,11 +154,21 @@ resource "aws_cognito_user_pool_client" "api_client" {
   # Read and write attributes
   read_attributes = [
     "email",
-    "email_verified"
+    "email_verified",
+    "custom:userType",
+    "custom:username",
+    "custom:firstName",
+    "custom:lastName",
+    "custom:displayName"
   ]
 
   write_attributes = [
-    "email"
+    "email",
+    "custom:userType",
+    "custom:username",
+    "custom:firstName",
+    "custom:lastName",
+    "custom:displayName"
   ]
 }
 

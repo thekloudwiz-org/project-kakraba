@@ -37,6 +37,8 @@
 - `test-creator@example.com` / `TestPassword123!`
 - `test-fan@example.com` / `TestPassword123!`
 
+**Note:** Custom attributes (userType, displayName, etc.) need to be added to Cognito User Pool. This requires Terraform apply which will recreate the User Pool.
+
 ### 4. CI Updated
 Changed from running all 114 tests to just 8 smoke tests:
 ```yaml
