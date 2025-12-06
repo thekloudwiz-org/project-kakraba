@@ -10,21 +10,13 @@ ENVIRONMENT=${1:-dev}
 
 echo "Creating test users for environment: $ENVIRONMENT"
 
-# Get Cognito User Pool ID from environment
-if [ "$ENVIRONMENT" = "dev" ]; then
-    USER_POOL_ID=$(aws cloudformation describe-stacks \
-        --stack-name kakraba-dev-auth \
-        --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' \
-        --output text \
-        --region eu-central-1)
-elif [ "$ENVIRONMENT" = "stg" ]; then
-    USER_POOL_ID=$(aws cloudformation describe-stacks \
-        --stack-name kakraba-stg-auth \
-        --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' \
-        --output text \
-        --region eu-central-1)
-else
-    echo "Invalid environment. Use 'dev' or 'stg'"
+# Get Cognito User Pool ID from Terraform output
+echo "Getting Cognito User Pool ID from Terraform..."
+USER_POOL_ID=$(cd infra && terraform output -raw cognito_user_pool_id 2>/dev/null)
+
+if [ -z "$USER_POOL_ID" ]; then
+    echo "Error: Could not get Cognito User Pool ID from Terraform"
+    echo "Make sure you're in the project root directory and Terraform is initialized"
     exit 1
 fi
 
@@ -49,7 +41,6 @@ create_user() {
     local email=$1
     local password=$2
     local name=$3
-    local user_type=$4
     
     echo "Creating user: $email"
     
@@ -72,8 +63,6 @@ create_user() {
         --user-attributes \
             Name=email,Value="$email" \
             Name=email_verified,Value=true \
-            Name=name,Value="$name" \
-            Name=custom:userType,Value="$user_type" \
         --message-action SUPPRESS \
         --region eu-central-1
     
@@ -89,10 +78,10 @@ create_user() {
 }
 
 # Create test creator
-create_user "$CREATOR_EMAIL" "$CREATOR_PASSWORD" "$CREATOR_NAME" "CREATOR"
+create_user "$CREATOR_EMAIL" "$CREATOR_PASSWORD" "$CREATOR_NAME"
 
 # Create test fan
-create_user "$FAN_EMAIL" "$FAN_PASSWORD" "$FAN_NAME" "FAN"
+create_user "$FAN_EMAIL" "$FAN_PASSWORD" "$FAN_NAME"
 
 echo ""
 echo "✅ Test users created successfully!"
