@@ -1,32 +1,46 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as fc from 'fast-check';
 import { CTAButtons } from '../components/CTAButtons';
 
 /**
- * Feature: creator-fan-portals, Property 0: Creator button redirects to creator portal
+ * Feature: creator-fan-portals, Property 0: Creator button scrolls to creator section
  * Validates: Requirements 0.3
  * 
- * For any click on the "I'm a Creator" button, the system should redirect to create-kakraba.thekloudwiz.com
+ * For any click on the "I'm a Creator" button, the system should scroll to the creator section
  */
-describe('Property 0: Creator button redirects to creator portal', () => {
+describe('Property 0: Creator button scrolls to creator section', () => {
+  let scrollIntoViewMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
-    // Reset window.location.href before each test
-    window.location.href = 'http://localhost:3000';
+    // Mock scrollIntoView
+    scrollIntoViewMock = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+    
+    // Mock getElementById to return a mock element
+    const mockCreatorElement = document.createElement('div');
+    mockCreatorElement.id = 'creators';
+    mockCreatorElement.scrollIntoView = scrollIntoViewMock;
+    
+    vi.spyOn(document, 'getElementById').mockImplementation((id) => {
+      if (id === 'creators') return mockCreatorElement;
+      return null;
+    });
   });
 
-  it('should redirect to creator portal when creator button is clicked', async () => {
+  it('should scroll to creator section when creator button is clicked', async () => {
     // Property: For any number of clicks on the creator button,
-    // the system should attempt to redirect to the creator portal
+    // the system should scroll to the creator section
     await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: 1, max: 5 }), // Number of clicks
         async (clickCount) => {
+          scrollIntoViewMock.mockClear();
           const user = userEvent.setup();
           const { unmount } = render(<CTAButtons />);
           
-          const creatorButton = screen.getByLabelText('Go to Creator Portal');
+          const creatorButton = screen.getByLabelText('Scroll to Creator Section');
           expect(creatorButton).toBeInTheDocument();
           
           // Click the button the specified number of times
@@ -34,8 +48,9 @@ describe('Property 0: Creator button redirects to creator portal', () => {
             await user.click(creatorButton);
           }
           
-          // Verify the redirect URL is set to creator portal
-          expect(window.location.href).toBe('https://create-kakraba.thekloudwiz.com');
+          // Verify scrollIntoView was called with smooth behavior
+          expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+          expect(scrollIntoViewMock).toHaveBeenCalledTimes(clickCount);
           
           // Clean up
           unmount();
@@ -48,35 +63,49 @@ describe('Property 0: Creator button redirects to creator portal', () => {
   it('should have correct ARIA label for accessibility', () => {
     render(<CTAButtons />);
     
-    const creatorButton = screen.getByLabelText('Go to Creator Portal');
+    const creatorButton = screen.getByLabelText('Scroll to Creator Section');
     expect(creatorButton).toBeInTheDocument();
     expect(creatorButton).toHaveTextContent(/creator/i);
   });
 });
 
 /**
- * Feature: creator-fan-portals, Property 0.1: Fan button redirects to fan portal
+ * Feature: creator-fan-portals, Property 0.1: Fan button scrolls to fan section
  * Validates: Requirements 0.4
  * 
- * For any click on the "I'm a Fan" button, the system should redirect to fan-kakraba.thekloudwiz.com
+ * For any click on the "I'm a Fan" button, the system should scroll to the fan section
  */
-describe('Property 0.1: Fan button redirects to fan portal', () => {
+describe('Property 0.1: Fan button scrolls to fan section', () => {
+  let scrollIntoViewMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
-    // Reset window.location.href before each test
-    window.location.href = 'http://localhost:3000';
+    // Mock scrollIntoView
+    scrollIntoViewMock = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+    
+    // Mock getElementById to return a mock element
+    const mockFanElement = document.createElement('div');
+    mockFanElement.id = 'fans';
+    mockFanElement.scrollIntoView = scrollIntoViewMock;
+    
+    vi.spyOn(document, 'getElementById').mockImplementation((id) => {
+      if (id === 'fans') return mockFanElement;
+      return null;
+    });
   });
 
-  it('should redirect to fan portal when fan button is clicked', async () => {
+  it('should scroll to fan section when fan button is clicked', async () => {
     // Property: For any number of clicks on the fan button,
-    // the system should attempt to redirect to the fan portal
+    // the system should scroll to the fan section
     await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: 1, max: 5 }), // Number of clicks
         async (clickCount) => {
+          scrollIntoViewMock.mockClear();
           const user = userEvent.setup();
           const { unmount } = render(<CTAButtons />);
           
-          const fanButton = screen.getByLabelText('Go to Fan Portal');
+          const fanButton = screen.getByLabelText('Scroll to Fan Section');
           expect(fanButton).toBeInTheDocument();
           
           // Click the button the specified number of times
@@ -84,8 +113,9 @@ describe('Property 0.1: Fan button redirects to fan portal', () => {
             await user.click(fanButton);
           }
           
-          // Verify the redirect URL is set to fan portal
-          expect(window.location.href).toBe('https://fan-kakraba.thekloudwiz.com');
+          // Verify scrollIntoView was called with smooth behavior
+          expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+          expect(scrollIntoViewMock).toHaveBeenCalledTimes(clickCount);
           
           // Clean up
           unmount();
@@ -98,7 +128,7 @@ describe('Property 0.1: Fan button redirects to fan portal', () => {
   it('should have correct ARIA label for accessibility', () => {
     render(<CTAButtons />);
     
-    const fanButton = screen.getByLabelText('Go to Fan Portal');
+    const fanButton = screen.getByLabelText('Scroll to Fan Section');
     expect(fanButton).toBeInTheDocument();
     expect(fanButton).toHaveTextContent(/fan/i);
   });
@@ -107,11 +137,30 @@ describe('Property 0.1: Fan button redirects to fan portal', () => {
 /**
  * Additional property: Both buttons should be independently functional
  * 
- * For any sequence of clicks on either button, each button should redirect to its respective portal
+ * For any sequence of clicks on either button, each button should scroll to its respective section
  */
 describe('Property: Independent button functionality', () => {
+  let scrollIntoViewMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
-    window.location.href = 'http://localhost:3000';
+    // Mock scrollIntoView
+    scrollIntoViewMock = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+    
+    // Mock getElementById to return mock elements
+    const mockCreatorElement = document.createElement('div');
+    mockCreatorElement.id = 'creators';
+    mockCreatorElement.scrollIntoView = scrollIntoViewMock;
+    
+    const mockFanElement = document.createElement('div');
+    mockFanElement.id = 'fans';
+    mockFanElement.scrollIntoView = scrollIntoViewMock;
+    
+    vi.spyOn(document, 'getElementById').mockImplementation((id) => {
+      if (id === 'creators') return mockCreatorElement;
+      if (id === 'fans') return mockFanElement;
+      return null;
+    });
   });
 
   it('should handle alternating clicks between creator and fan buttons', async () => {
@@ -119,24 +168,26 @@ describe('Property: Independent button functionality', () => {
       fc.asyncProperty(
         fc.array(fc.boolean(), { minLength: 1, maxLength: 3 }), // true = creator, false = fan
         async (clickSequence) => {
+          scrollIntoViewMock.mockClear();
           const user = userEvent.setup();
           const { unmount } = render(<CTAButtons />);
           
-          const creatorButton = screen.getByLabelText('Go to Creator Portal');
-          const fanButton = screen.getByLabelText('Go to Fan Portal');
+          const creatorButton = screen.getByLabelText('Scroll to Creator Section');
+          const fanButton = screen.getByLabelText('Scroll to Fan Section');
           
+          let expectedCalls = 0;
           for (const isCreator of clickSequence) {
-            // Reset location before each click
-            window.location.href = 'http://localhost:3000';
-            
             if (isCreator) {
               await user.click(creatorButton);
-              expect(window.location.href).toBe('https://create-kakraba.thekloudwiz.com');
             } else {
               await user.click(fanButton);
-              expect(window.location.href).toBe('https://fan-kakraba.thekloudwiz.com');
             }
+            expectedCalls++;
           }
+          
+          // Verify scrollIntoView was called the correct number of times
+          expect(scrollIntoViewMock).toHaveBeenCalledTimes(expectedCalls);
+          expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
           
           // Clean up
           unmount();
