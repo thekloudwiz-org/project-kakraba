@@ -70,13 +70,7 @@ jobs:
             -backend-config="key=project-kakraba/${{ inputs.environment }}-tf.state"
       
       - name: Terraform Validate
-        run: |
-          echo "Running terraform validate..."
-          terraform validate -json || {
-            echo "Terraform validate failed. Showing detailed output:"
-            terraform validate
-            exit 1
-          }
+        run: terraform validate 2>&1 | tee validate.log || (cat validate.log && exit 1)
       
       - name: Setup tflint
         uses: terraform-linters/setup-tflint@v4
