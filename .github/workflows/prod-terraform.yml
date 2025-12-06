@@ -19,7 +19,7 @@ jobs:
     with:
       environment: prod
       aws-region: eu-central-1
-      terraform-version: '1.6.0'
+      terraform-version: '1.14.0'
       run-validation: false
       tfvars-file: prod.tfvars
     secrets: inherit

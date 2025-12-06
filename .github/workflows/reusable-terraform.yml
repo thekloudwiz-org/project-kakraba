@@ -14,7 +14,7 @@ on:
       terraform-version:
         required: false
         type: string
-        default: '1.6.0'
+        default: '1.14.0'
       run-validation:
         required: false
         type: boolean

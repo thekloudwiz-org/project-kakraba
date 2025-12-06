@@ -25,7 +25,7 @@ jobs:
     with:
       environment: dev
       aws-region: eu-central-1
-      terraform-version: '1.6.0'
+      terraform-version: '1.14.0'
       run-validation: true
       tfvars-file: dev.tfvars
     secrets: inherit
