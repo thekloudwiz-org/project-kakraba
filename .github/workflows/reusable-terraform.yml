@@ -140,9 +140,11 @@ jobs:
       - name: Terraform Output
         id: output
         run: |
-          OUTPUT=$(terraform output -json)
-          echo "json=$OUTPUT" >> $GITHUB_OUTPUT
-          echo "$OUTPUT" > outputs.json
+          terraform output -json > outputs.json
+          # Use delimiter for multiline output
+          echo "json<<EOF" >> $GITHUB_OUTPUT
+          cat outputs.json >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
       
       - name: Upload Terraform outputs
         uses: actions/upload-artifact@v4
