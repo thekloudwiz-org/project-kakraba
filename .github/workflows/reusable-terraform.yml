@@ -97,8 +97,12 @@ jobs:
       - name: Build Lambda Package
         run: |
           cd ../app
+          echo "Installing dependencies..."
+          npm ci --silent
+          echo "Building Lambda package..."
           chmod +x scripts/package-lambda.sh
           ./scripts/package-lambda.sh
+          echo "Lambda package created:"
           ls -lh lambda.zip
       
       - name: Setup Terraform
