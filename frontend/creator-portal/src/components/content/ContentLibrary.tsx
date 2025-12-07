@@ -137,7 +137,8 @@ export default function ContentLibrary() {
             <div
               key={item.contentId}
               data-testid="content-item"
-              className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden hover:border-purple-500 transition-colors"
+              onClick={() => handlePreview(item.contentId)}
+              className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden hover:border-purple-500 transition-colors cursor-pointer"
             >
               {/* Thumbnail */}
               <div className="aspect-video bg-gray-700 flex items-center justify-center">
@@ -175,21 +176,21 @@ export default function ContentLibrary() {
                 {/* Actions */}
                 <div className="flex items-center space-x-2 mt-4">
                   <button
-                    onClick={() => handlePreview(item.contentId)}
-                    className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
-                  >
-                    Preview
-                  </button>
-                  <button
                     data-testid="edit-button"
-                    onClick={() => handleEdit(item.contentId)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(item.contentId);
+                    }}
                     className="flex-1 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
                   >
                     Edit
                   </button>
                   <button
                     data-testid="delete-button"
-                    onClick={() => handleDelete(item.contentId)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(item.contentId);
+                    }}
                     className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,7 +208,8 @@ export default function ContentLibrary() {
             <div
               key={item.contentId}
               data-testid="content-item"
-              className="bg-gray-800 rounded-lg border border-gray-700 p-4 hover:border-purple-500 transition-colors"
+              onClick={() => handlePreview(item.contentId)}
+              className="bg-gray-800 rounded-lg border border-gray-700 p-4 hover:border-purple-500 transition-colors cursor-pointer"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4 flex-1">
@@ -232,21 +234,21 @@ export default function ContentLibrary() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => handlePreview(item.contentId)}
-                    className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
-                  >
-                    Preview
-                  </button>
-                  <button
                     data-testid="edit-button"
-                    onClick={() => handleEdit(item.contentId)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(item.contentId);
+                    }}
                     className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
                   >
                     Edit
                   </button>
                   <button
                     data-testid="delete-button"
-                    onClick={() => handleDelete(item.contentId)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(item.contentId);
+                    }}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                   >
                     Delete

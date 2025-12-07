@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { api, Spinner } from '@kakraba/shared';
+import { api, Spinner, Input, Button } from '@kakraba/shared';
+import { useForm } from 'react-hook-form';
 
 interface ContentUploaderProps {
   onUploadComplete?: (contentId: string) => void;
@@ -13,6 +14,16 @@ interface UploadProgress {
   error?: string;
 }
 
+interface SelectedFile {
+  file: File;
+  preview?: string;
+}
+
+interface MetadataForm {
+  title: string;
+  description: string;
+}
+
 const ALLOWED_FILE_TYPES = {
   'audio/*': ['.mp3', '.wav', '.m4a', '.flac'],
   'video/*': ['.mp4', '.mov', '.avi', '.mkv'],
@@ -23,7 +34,21 @@ const ALLOWED_FILE_TYPES = {
 const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
 
 export default function ContentUploader({ onUploadComplete }: ContentUploaderProps) {
+  const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
   const [uploads, setUploads] = useState<Map<string, UploadProgress>>(new Map());
+  const [isUploading, setIsUploading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<MetadataForm>({
+    defaultValues: {
+      title: '',
+      description: '',
+    },
+  });
 
   const validateFile = (file: File): string | null => {
     // Check file size
@@ -44,9 +69,9 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
     return null;
   };
 
-  const uploadFile = useCallback(async (file: File) => {
+  const uploadFile = useCallback(async (file: File, title: string, description: string) => {
     const uploadId = `${file.name}-${Date.now()}`;
-    
+
     // Add to uploads map
     setUploads(prev => new Map(prev).set(uploadId, {
       filename: file.name,
@@ -102,8 +127,8 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
       
       await api.content.createContent({
         contentId,
-        title: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
-        description: '',
+        title,
+        description,
         contentType: file.type.startsWith('audio') ? 'AUDIO' :
                      file.type.startsWith('video') ? 'VIDEO' :
                      file.type === 'application/pdf' ? 'PDF' : 'IMAGE',
@@ -147,75 +172,162 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
     }
   }, [onUploadComplete]);
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    for (const file of acceptedFiles) {
-      const validationError = validateFile(file);
-      if (validationError) {
-        const uploadId = `${file.name}-${Date.now()}`;
-        setUploads(prev => new Map(prev).set(uploadId, {
-          filename: file.name,
-          progress: 0,
-          status: 'error',
-          error: validationError,
-        }));
-        continue;
-      }
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
 
-      await uploadFile(file);
+    const file = acceptedFiles[0]; // Only handle first file for now
+    const validationError = validateFile(file);
+
+    if (validationError) {
+      const uploadId = `${file.name}-${Date.now()}`;
+      setUploads(prev => new Map(prev).set(uploadId, {
+        filename: file.name,
+        progress: 0,
+        status: 'error',
+        error: validationError,
+      }));
+      return;
     }
-  }, [uploadFile]);
+
+    // Set selected file and pre-fill title from filename
+    const titleFromFilename = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+    setSelectedFile({ file });
+    reset({ title: titleFromFilename, description: '' });
+  }, [reset]);
+
+  const onSubmitMetadata = async (data: MetadataForm) => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    await uploadFile(selectedFile.file, data.title, data.description);
+    setIsUploading(false);
+
+    // Reset form
+    setSelectedFile(null);
+    reset();
+  };
+
+  const handleCancel = () => {
+    setSelectedFile(null);
+    reset();
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: ALLOWED_FILE_TYPES,
     maxSize: MAX_FILE_SIZE,
-    multiple: true,
+    multiple: false,
+    disabled: selectedFile !== null, // Disable when file is selected
   });
 
   return (
     <div className="space-y-4">
-      {/* Dropzone */}
-      <div
-        {...getRootProps()}
-        data-testid="upload-area"
-        className={`
-          border-2 border-dashed rounded-lg p-12 text-center cursor-pointer
-          transition-colors
-          ${isDragActive
-            ? 'border-purple-500 bg-purple-500/10'
-            : 'border-gray-600 hover:border-gray-500 bg-gray-800'
-          }
-        `}
-      >
-        <input {...getInputProps()} />
-        <div className="flex flex-col items-center space-y-4">
-          <svg
-            className="w-16 h-16 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+      {!selectedFile ? (
+        <>
+          {/* Dropzone */}
+          <div
+            {...getRootProps()}
+            data-testid="upload-area"
+            className={`
+              border-2 border-dashed rounded-lg p-12 text-center cursor-pointer
+              transition-colors
+              ${isDragActive
+                ? 'border-purple-500 bg-purple-500/10'
+                : 'border-gray-600 hover:border-gray-500 bg-gray-800'
+              }
+            `}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-            />
-          </svg>
-          {isDragActive ? (
-            <p className="text-lg text-purple-400">Drop files here...</p>
-          ) : (
-            <>
-              <p className="text-lg text-white">
-                Drag & drop files here, or click to select
+            <input {...getInputProps()} />
+            <div className="flex flex-col items-center space-y-4">
+              <svg
+                className="w-16 h-16 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+              {isDragActive ? (
+                <p className="text-lg text-purple-400">Drop files here...</p>
+              ) : (
+                <>
+                  <p className="text-lg text-white">
+                    Drag & drop files here, or click to select
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    Supported: Audio, Video, PDF, Images (max 500MB)
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Metadata Form */}
+          <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Add Content Details
+            </h3>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-400 mb-2">Selected File:</p>
+              <p className="text-white font-medium">{selectedFile.file.name}</p>
+              <p className="text-sm text-gray-500">
+                {(selectedFile.file.size / (1024 * 1024)).toFixed(2)} MB
               </p>
-              <p className="text-sm text-gray-400">
-                Supported: Audio, Video, PDF, Images (max 500MB)
-              </p>
-            </>
-          )}
-        </div>
-      </div>
+            </div>
+
+            <form onSubmit={handleSubmit(onSubmitMetadata)} className="space-y-4">
+              <div>
+                <Input
+                  {...register('title', { required: 'Title is required' })}
+                  name="title"
+                  type="text"
+                  placeholder="Content Title"
+                  error={errors.title?.message}
+                  disabled={isUploading}
+                />
+              </div>
+
+              <div>
+                <textarea
+                  {...register('description')}
+                  name="description"
+                  placeholder="Description (optional)"
+                  rows={4}
+                  disabled={isUploading}
+                  className="w-full px-4 py-2 bg-gray-900 text-white rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none disabled:opacity-50"
+                />
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <Button
+                  type="submit"
+                  isLoading={isUploading}
+                  disabled={isUploading}
+                  className="flex-1"
+                >
+                  Upload Content
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleCancel}
+                  disabled={isUploading}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </div>
+        </>
+      )}
 
       {/* Upload Progress */}
       {uploads.size > 0 && (
