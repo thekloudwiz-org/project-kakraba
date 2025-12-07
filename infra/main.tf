@@ -64,6 +64,7 @@ module "iam" {
   tags                  = local.common_tags
   dynamodb_table_arn    = module.database.table_arn
   cloudfront_secret_arn = module.content_delivery.cloudfront_private_key_secret_arn
+  s3_bucket_arn         = module.storage.bucket_arn
 }
 
 # Compute Module - Lambda function
@@ -75,6 +76,7 @@ module "compute" {
   tags                   = local.common_tags
   lambda_package_path    = var.lambda_package_path
   table_name             = module.database.table_name
+  bucket_name            = module.storage.bucket_id
   cloudfront_domain      = module.content_delivery.cloudfront_domain
   cloudfront_key_pair_id = module.content_delivery.cloudfront_key_pair_id
   cloudfront_secret_arn  = module.content_delivery.cloudfront_private_key_secret_arn

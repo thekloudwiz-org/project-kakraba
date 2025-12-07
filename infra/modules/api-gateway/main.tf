@@ -6,7 +6,7 @@ resource "aws_apigatewayv2_api" "main" {
 
   cors_configuration {
     allow_origins = ["*"] # Configure appropriately for production
-    allow_methods = ["POST", "OPTIONS"]
+    allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     allow_headers = ["content-type", "authorization"]
     max_age       = 300
   }
@@ -50,6 +50,55 @@ resource "aws_apigatewayv2_route" "generate_link" {
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
 }
 
+# Content Management Routes
+resource "aws_apigatewayv2_route" "content_upload_url" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "POST /content/upload-url"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "content_create" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "POST /content"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "content_list" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /content"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "content_get" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /content/{contentId}"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "content_update" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "PUT /content/{contentId}"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "content_delete" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "DELETE /content/{contentId}"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
 # Default stage with auto-deploy
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.main.id
@@ -85,7 +134,7 @@ resource "aws_lambda_permission" "api_gateway" {
   action        = "lambda:InvokeFunction"
   function_name = var.lambda_function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/$default/POST/access/generate-link"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }
 
 # CloudWatch Log Group for API Gateway logs

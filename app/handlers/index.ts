@@ -1,7 +1,8 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBRepository } from '../repositories/DynamoDBRepository';
 import { AccessValidator } from '../services/AccessValidator';
 import { SignedUrlGenerator } from '../services/SignedUrlGenerator';
+import { ContentHandler } from './contentHandler';
 import { AccessRequest, AccessResponse, ErrorResponse, Intent, Config } from '../types';
 
 // Load configuration from environment variables
@@ -13,6 +14,8 @@ const config: Config = {
   nodeEnv: process.env.NODE_ENV || 'production'
 };
 
+const bucketName = process.env.BUCKET_NAME!;
+
 // Initialize services (reuse across invocations)
 const repository = new DynamoDBRepository(config.tableName);
 const validator = new AccessValidator(repository);
@@ -21,20 +24,50 @@ const urlGenerator = new SignedUrlGenerator(
   config.cloudfrontKeyPairId,
   config.cloudfrontPrivateKeySecretArn
 );
+const contentHandler = new ContentHandler(bucketName, config.tableName);
 
 /**
- * Lambda handler for content access control
- * Validates user access and generates signed CloudFront URLs
+ * Lambda handler for API Gateway requests
+ * Routes requests to appropriate handlers based on path
  */
 export const handler = async (
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
+  event: APIGatewayProxyEventV2
+): Promise<APIGatewayProxyResultV2> => {
   console.log('Received event:', JSON.stringify(event, null, 2));
 
+  const path = event.rawPath;
+
+  try {
+    // Route content management requests
+    if (path.startsWith('/content')) {
+      return await contentHandler.handle(event);
+    }
+
+    // Route access control requests
+    if (path === '/access/generate-link') {
+      return await handleAccessControl(event);
+    }
+
+    // Unknown route
+    return errorResponse(404, 'NotFound', 'Endpoint not found');
+
+  } catch (error: any) {
+    console.error('Error processing request:', error);
+    return errorResponse(500, 'InternalServerError', 'An error occurred processing your request');
+  }
+};
+
+/**
+ * Handle access control requests for content delivery
+ * Validates user access and generates signed CloudFront URLs
+ */
+async function handleAccessControl(
+  event: APIGatewayProxyEventV2
+): Promise<APIGatewayProxyResultV2> {
   try {
     // Parse and validate request body
     const request = parseRequest(event);
-    
+
     // Validate access
     const validationResult = await validator.validateAccess(
       request.user_id,
@@ -83,24 +116,23 @@ export const handler = async (
     return successResponse(response);
 
   } catch (error: any) {
-    console.error('Error processing request:', error);
-    
+    console.error('Error in access control handler:', error);
+
     // Check if it's a validation error (400)
-    if (error.message?.includes('Missing required parameter') || 
+    if (error.message?.includes('Missing required parameter') ||
         error.message?.includes('Invalid intent') ||
         error.message?.includes('Invalid JSON')) {
       return errorResponse(400, 'InvalidRequest', error.message);
     }
 
-    // Internal server error (500)
-    return errorResponse(500, 'InternalServerError', 'An error occurred processing your request');
+    throw error;
   }
-};
+}
 
 /**
  * Parse and validate request from API Gateway event
  */
-function parseRequest(event: APIGatewayProxyEvent): AccessRequest {
+function parseRequest(event: APIGatewayProxyEventV2): AccessRequest {
   if (!event.body) {
     throw new Error('Missing required parameter: body');
   }
@@ -140,12 +172,12 @@ function parseRequest(event: APIGatewayProxyEvent): AccessRequest {
 /**
  * Build success response
  */
-function successResponse(data: AccessResponse): APIGatewayProxyResult {
+function successResponse(data: AccessResponse): APIGatewayProxyResultV2 {
   return {
     statusCode: 200,
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*' // Configure appropriately for production
+      'Access-Control-Allow-Origin': '*'
     },
     body: JSON.stringify(data)
   };
@@ -154,7 +186,7 @@ function successResponse(data: AccessResponse): APIGatewayProxyResult {
 /**
  * Build error response
  */
-function errorResponse(statusCode: number, error: string, message: string): APIGatewayProxyResult {
+function errorResponse(statusCode: number, error: string, message: string): APIGatewayProxyResultV2 {
   const errorBody: ErrorResponse = {
     error,
     message
@@ -164,7 +196,7 @@ function errorResponse(statusCode: number, error: string, message: string): APIG
     statusCode,
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*' // Configure appropriately for production
+      'Access-Control-Allow-Origin': '*'
     },
     body: JSON.stringify(errorBody)
   };

@@ -36,12 +36,35 @@ resource "aws_iam_policy" "dynamodb_access" {
         Action = [
           "dynamodb:GetItem",
           "dynamodb:Query",
-          "dynamodb:UpdateItem"
+          "dynamodb:UpdateItem",
+          "dynamodb:PutItem",
+          "dynamodb:DeleteItem"
         ]
         Resource = [
           var.dynamodb_table_arn,
           "${var.dynamodb_table_arn}/index/*"
         ]
+      }
+    ]
+  })
+}
+
+# Policy for S3 access
+resource "aws_iam_policy" "s3_access" {
+  name        = "${var.project_name}-${var.environment}-s3-access"
+  description = "Allow Lambda to access S3 bucket for content management"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject"
+        ]
+        Resource = "${var.s3_bucket_arn}/*"
       }
     ]
   })
@@ -111,6 +134,11 @@ resource "aws_iam_policy" "xray_access" {
 resource "aws_iam_role_policy_attachment" "dynamodb_access" {
   role       = aws_iam_role.lambda_execution.name
   policy_arn = aws_iam_policy.dynamodb_access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "s3_access" {
+  role       = aws_iam_role.lambda_execution.name
+  policy_arn = aws_iam_policy.s3_access.arn
 }
 
 resource "aws_iam_role_policy_attachment" "secrets_manager_access" {

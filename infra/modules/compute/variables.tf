@@ -43,3 +43,8 @@ variable "iam_role_arn" {
   description = "IAM role ARN for Lambda execution"
   type        = string
 }
+
+variable "bucket_name" {
+  description = "S3 bucket name for content storage"
+  type        = string
+}

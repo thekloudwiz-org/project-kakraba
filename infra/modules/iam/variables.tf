@@ -23,3 +23,8 @@ variable "cloudfront_secret_arn" {
   description = "Secrets Manager secret ARN for CloudFront private key"
   type        = string
 }
+
+variable "s3_bucket_arn" {
+  description = "S3 bucket ARN for content storage"
+  type        = string
+}

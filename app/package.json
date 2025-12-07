@@ -22,9 +22,11 @@
   "license": "MIT",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.490.0",
-    "@aws-sdk/lib-dynamodb": "^3.490.0",
+    "@aws-sdk/client-s3": "^3.946.0",
     "@aws-sdk/client-secrets-manager": "^3.490.0",
     "@aws-sdk/cloudfront-signer": "^3.490.0",
+    "@aws-sdk/lib-dynamodb": "^3.490.0",
+    "@aws-sdk/s3-request-presigner": "^3.946.0",
     "@types/aws-lambda": "^8.10.131",
     "@types/node": "^20.10.6",
     "typescript": "^5.3.3"

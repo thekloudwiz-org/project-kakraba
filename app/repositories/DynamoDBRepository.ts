@@ -3,9 +3,12 @@ import {
   DynamoDBDocumentClient,
   GetCommand,
   QueryCommand,
-  UpdateCommand
+  UpdateCommand,
+  PutCommand,
+  DeleteCommand
 } from '@aws-sdk/lib-dynamodb';
 import { AccessRight, Product } from '../types';
+import { ContentMetadata } from '../services/ContentService';
 
 export class DynamoDBRepository {
   private docClient: DynamoDBDocumentClient;
@@ -131,6 +134,166 @@ export class DynamoDBRepository {
       }
       console.error('Error decrementing downloads:', error);
       throw new Error('Failed to update download counter');
+    }
+  }
+
+  /**
+   * Create content metadata record
+   */
+  async createContent(content: ContentMetadata): Promise<void> {
+    try {
+      await this.docClient.send(
+        new PutCommand({
+          TableName: this.tableName,
+          Item: {
+            PK: `USER#${content.userId}`,
+            SK: `CONTENT#${content.contentId}`,
+            contentId: content.contentId,
+            userId: content.userId,
+            title: content.title,
+            description: content.description,
+            contentType: content.contentType,
+            s3Key: content.s3Key,
+            fileSize: content.fileSize,
+            uploadedAt: content.uploadedAt,
+            thumbnailUrl: content.thumbnailUrl,
+          },
+        })
+      );
+    } catch (error) {
+      console.error('Error creating content:', error);
+      throw new Error('Failed to create content record');
+    }
+  }
+
+  /**
+   * Get content metadata
+   */
+  async getContent(userId: string, contentId: string): Promise<ContentMetadata | null> {
+    try {
+      const response = await this.docClient.send(
+        new GetCommand({
+          TableName: this.tableName,
+          Key: {
+            PK: `USER#${userId}`,
+            SK: `CONTENT#${contentId}`,
+          },
+        })
+      );
+
+      return (response.Item as ContentMetadata) || null;
+    } catch (error) {
+      console.error('Error getting content:', error);
+      throw new Error('Failed to retrieve content');
+    }
+  }
+
+  /**
+   * List user's content
+   */
+  async listUserContent(
+    userId: string,
+    options?: { limit?: number; contentType?: string }
+  ): Promise<{ items: ContentMetadata[] }> {
+    try {
+      const params: any = {
+        TableName: this.tableName,
+        KeyConditionExpression: 'PK = :userPK AND begins_with(SK, :contentPrefix)',
+        ExpressionAttributeValues: {
+          ':userPK': `USER#${userId}`,
+          ':contentPrefix': 'CONTENT#',
+        },
+        ScanIndexForward: false, // Sort by SK descending (newest first)
+      };
+
+      if (options?.contentType) {
+        params.FilterExpression = 'contentType = :contentType';
+        params.ExpressionAttributeValues[':contentType'] = options.contentType;
+      }
+
+      const response = await this.docClient.send(new QueryCommand(params));
+
+      return {
+        items: (response.Items as ContentMetadata[]) || [],
+      };
+    } catch (error) {
+      console.error('Error listing content:', error);
+      throw new Error('Failed to list content');
+    }
+  }
+
+  /**
+   * Update content metadata
+   */
+  async updateContent(
+    userId: string,
+    contentId: string,
+    updates: Partial<Pick<ContentMetadata, 'title' | 'description' | 'thumbnailUrl'>>
+  ): Promise<ContentMetadata> {
+    try {
+      const updateExpressions: string[] = [];
+      const expressionAttributeValues: Record<string, any> = {};
+      const expressionAttributeNames: Record<string, string> = {};
+
+      if (updates.title !== undefined) {
+        updateExpressions.push('#title = :title');
+        expressionAttributeNames['#title'] = 'title';
+        expressionAttributeValues[':title'] = updates.title;
+      }
+
+      if (updates.description !== undefined) {
+        updateExpressions.push('#description = :description');
+        expressionAttributeNames['#description'] = 'description';
+        expressionAttributeValues[':description'] = updates.description;
+      }
+
+      if (updates.thumbnailUrl !== undefined) {
+        updateExpressions.push('thumbnailUrl = :thumbnailUrl');
+        expressionAttributeValues[':thumbnailUrl'] = updates.thumbnailUrl;
+      }
+
+      if (updateExpressions.length === 0) {
+        throw new Error('No updates provided');
+      }
+
+      const response = await this.docClient.send(
+        new UpdateCommand({
+          TableName: this.tableName,
+          Key: {
+            PK: `USER#${userId}`,
+            SK: `CONTENT#${contentId}`,
+          },
+          UpdateExpression: `SET ${updateExpressions.join(', ')}`,
+          ExpressionAttributeNames: expressionAttributeNames,
+          ExpressionAttributeValues: expressionAttributeValues,
+          ReturnValues: 'ALL_NEW',
+        })
+      );
+
+      return response.Attributes as ContentMetadata;
+    } catch (error) {
+      console.error('Error updating content:', error);
+      throw new Error('Failed to update content');
+    }
+  }
+
+  /**
+   * Delete content metadata
+   */
+  async deleteContent(userId: string, contentId: string): Promise<void> {
+    try {
+      await this.docClient.send(
+        new DeleteCommand({
+          TableName: this.tableName,
+          Key: {
+            PK: `USER#${userId}`,
+            SK: `CONTENT#${contentId}`,
+          },
+        })
+      );
+    } catch (error) {
+      console.error('Error deleting content:', error);
+      throw new Error('Failed to delete content');
     }
   }
 }

@@ -12,6 +12,7 @@ resource "aws_lambda_function" "access_control" {
   environment {
     variables = {
       TABLE_NAME                        = var.table_name
+      BUCKET_NAME                       = var.bucket_name
       CLOUDFRONT_DOMAIN                 = var.cloudfront_domain
       CLOUDFRONT_KEY_PAIR_ID            = var.cloudfront_key_pair_id
       CLOUDFRONT_PRIVATE_KEY_SECRET_ARN = var.cloudfront_secret_arn
