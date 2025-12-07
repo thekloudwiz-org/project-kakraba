@@ -55,10 +55,9 @@ export default function LoginForm() {
               Email
             </label>
             <Input
-              id="email"
-              name="email"
-              type="email"
               {...register('email')}
+              id="email"
+              type="email"
               placeholder="creator@example.com"
               className="w-full"
             />
@@ -72,10 +71,9 @@ export default function LoginForm() {
               Password
             </label>
             <Input
-              id="password"
-              name="password"
-              type="password"
               {...register('password')}
+              id="password"
+              type="password"
               placeholder="••••••••"
               className="w-full"
             />

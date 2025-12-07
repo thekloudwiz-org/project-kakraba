@@ -24,8 +24,14 @@ export default function DashboardPage() {
               </a>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-300">Welcome, {user?.username}!</span>
               <button
+                data-testid="user-menu"
+                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+              >
+                <span className="text-sm">Welcome, {user?.username}!</span>
+              </button>
+              <button
+                data-testid="logout-button"
                 onClick={handleSignOut}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
               >

@@ -5,9 +5,12 @@ import { testContent } from '../fixtures/test-data';
 
 /**
  * Creator Portal Content Management Tests
- * 
+ *
  * Tests content upload, editing, and deletion flows
  * Validates: Requirements 2.1-2.8
+ *
+ * NOTE: Tests requiring existing content data will be skipped until
+ * backend API seeding infrastructure is available.
  */
 
 test.describe('Content Management', () => {

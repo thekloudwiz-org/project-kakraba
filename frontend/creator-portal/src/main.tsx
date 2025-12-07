@@ -20,9 +20,12 @@ const queryClient = new QueryClient({
   },
 });
 
+// Use basename only in production, not in local dev
+const basename = import.meta.env.PROD ? '/creator' : '';
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter basename="/creator">
+    <BrowserRouter basename={basename}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <App />

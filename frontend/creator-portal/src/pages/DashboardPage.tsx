@@ -1,4 +1,5 @@
 import { useAuth } from '@kakraba/shared';
+import Header from '../components/layout/Header';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
 import RevenueChart from '../components/dashboard/RevenueChart';
 import RecentActivity from '../components/dashboard/RecentActivity';
@@ -9,6 +10,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
+      <Header />
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">

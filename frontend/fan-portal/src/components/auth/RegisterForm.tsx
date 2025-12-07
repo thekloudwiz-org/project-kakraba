@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
-  username: z.string().min(3, 'Username must be at least 3 characters').max(50),
+  displayName: z.string().min(3, 'Display name must be at least 3 characters').max(50),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
@@ -38,7 +38,7 @@ export default function RegisterForm() {
       await signUp({
         email: data.email,
         password: data.password,
-        username: data.username,
+        username: data.displayName,
         firstName: '',
         lastName: '',
         userType: 'FAN',
@@ -66,10 +66,9 @@ export default function RegisterForm() {
 
       <div>
         <Input
-          name="displayName"
-          {...register('username')}
-          placeholder="Username"
-          error={errors.username?.message}
+          {...register('displayName')}
+          placeholder="Display Name"
+          error={errors.displayName?.message}
         />
       </div>
 

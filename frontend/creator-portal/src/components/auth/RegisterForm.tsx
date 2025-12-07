@@ -68,10 +68,9 @@ export default function RegisterForm() {
               Email
             </label>
             <Input
-              id="email"
-              name="email"
-              type="email"
               {...register('email')}
+              id="email"
+              type="email"
               placeholder="creator@example.com"
               className="w-full"
             />
@@ -85,10 +84,9 @@ export default function RegisterForm() {
               Display Name
             </label>
             <Input
-              id="displayName"
-              name="displayName"
-              type="text"
               {...register('displayName')}
+              id="displayName"
+              type="text"
               placeholder="Your Creator Name"
               className="w-full"
             />
@@ -102,9 +100,8 @@ export default function RegisterForm() {
               Bio (Optional)
             </label>
             <textarea
-              id="bio"
-              name="bio"
               {...register('bio')}
+              id="bio"
               placeholder="Tell your fans about yourself..."
               rows={3}
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"

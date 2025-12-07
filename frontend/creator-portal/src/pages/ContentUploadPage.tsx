@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import ContentUploader from '../components/content/ContentUploader';
+import Header from '../components/layout/Header';
 
 export default function ContentUploadPage() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function ContentUploadPage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
+      <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Upload Content</h1>

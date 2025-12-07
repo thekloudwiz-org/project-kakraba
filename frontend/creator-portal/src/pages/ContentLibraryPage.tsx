@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import ContentLibrary from '../components/content/ContentLibrary';
+import Header from '../components/layout/Header';
 import { Button } from '@kakraba/shared';
 
 export default function ContentLibraryPage() {
@@ -7,6 +8,7 @@ export default function ContentLibraryPage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
+      <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>

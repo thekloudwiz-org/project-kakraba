@@ -19,7 +19,7 @@ export default function ContentPreview({ contentId, onClose }: ContentPreviewPro
           <Spinner />
         </div>
       ) : content ? (
-        <div className="space-y-4">
+        <div className="space-y-4" data-testid="content-details">
           {/* Thumbnail/Preview */}
           <div className="aspect-video bg-gray-700 rounded-lg flex items-center justify-center">
             {content.thumbnailUrl ? (

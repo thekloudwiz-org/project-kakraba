@@ -72,6 +72,7 @@ export default function ContentLibrary() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <select
+            data-testid="content-type-filter"
             value={filterType}
             onChange={(e) => {
               setFilterType(e.target.value as ContentType);
@@ -131,10 +132,11 @@ export default function ContentLibrary() {
           <p className="text-gray-400">No content found</p>
         </div>
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-testid="content-grid">
           {content.map((item) => (
             <div
               key={item.contentId}
+              data-testid="content-item"
               className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden hover:border-purple-500 transition-colors"
             >
               {/* Thumbnail */}
@@ -161,7 +163,7 @@ export default function ContentLibrary() {
                   <h3 className="text-white font-medium truncate flex-1">
                     {item.title}
                   </h3>
-                  <Badge variant="default">{item.contentType}</Badge>
+                  <Badge variant="default" data-testid="content-type">{item.contentType}</Badge>
                 </div>
                 <p className="text-sm text-gray-400 line-clamp-2 mb-4">
                   {item.description || 'No description'}
@@ -179,12 +181,14 @@ export default function ContentLibrary() {
                     Preview
                   </button>
                   <button
+                    data-testid="edit-button"
                     onClick={() => handleEdit(item.contentId)}
                     className="flex-1 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
                   >
                     Edit
                   </button>
                   <button
+                    data-testid="delete-button"
                     onClick={() => handleDelete(item.contentId)}
                     className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                   >
@@ -198,10 +202,11 @@ export default function ContentLibrary() {
           ))}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3" data-testid="content-grid">
           {content.map((item) => (
             <div
               key={item.contentId}
+              data-testid="content-item"
               className="bg-gray-800 rounded-lg border border-gray-700 p-4 hover:border-purple-500 transition-colors"
             >
               <div className="flex items-center justify-between">
@@ -218,7 +223,7 @@ export default function ContentLibrary() {
                       {item.description || 'No description'}
                     </p>
                     <div className="flex items-center space-x-4 mt-1">
-                      <Badge variant="default">{item.contentType}</Badge>
+                      <Badge variant="default" data-testid="content-type">{item.contentType}</Badge>
                       <span className="text-xs text-gray-500">
                         {new Date(item.uploadedAt).toLocaleDateString()}
                       </span>
@@ -233,12 +238,14 @@ export default function ContentLibrary() {
                     Preview
                   </button>
                   <button
+                    data-testid="edit-button"
                     onClick={() => handleEdit(item.contentId)}
                     className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
                   >
                     Edit
                   </button>
                   <button
+                    data-testid="delete-button"
                     onClick={() => handleDelete(item.contentId)}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                   >
@@ -253,7 +260,7 @@ export default function ContentLibrary() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center space-x-2">
+        <div className="flex items-center justify-center space-x-2" data-testid="pagination">
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
@@ -265,6 +272,7 @@ export default function ContentLibrary() {
             Page {page} of {totalPages}
           </span>
           <button
+            data-testid="next-page"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"

@@ -38,7 +38,7 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
       .some(ext => ext === fileExtension);
 
     if (!isValidType) {
-      return 'File type not supported. Supported types: audio, video, PDF, images';
+      return 'Unsupported file type. Supported types: audio, video, PDF, images';
     }
 
     return null;
@@ -177,11 +177,12 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
       {/* Dropzone */}
       <div
         {...getRootProps()}
+        data-testid="upload-area"
         className={`
           border-2 border-dashed rounded-lg p-12 text-center cursor-pointer
           transition-colors
-          ${isDragActive 
-            ? 'border-purple-500 bg-purple-500/10' 
+          ${isDragActive
+            ? 'border-purple-500 bg-purple-500/10'
             : 'border-gray-600 hover:border-gray-500 bg-gray-800'
           }
         `}
@@ -218,7 +219,7 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
 
       {/* Upload Progress */}
       {uploads.size > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-3" data-testid="upload-progress">
           <h3 className="text-sm font-semibold text-white">Uploads</h3>
           {Array.from(uploads.entries()).map(([id, upload]) => (
             <div

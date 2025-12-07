@@ -2,8 +2,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-export default defineConfig({
-  base: '/fan/',
+export default defineConfig(({ mode }) => ({
+  // Use base path only in production, not in development
+  base: mode === 'production' ? '/fan/' : '/',
   plugins: [react()],
   resolve: {
     alias: {
@@ -49,4 +50,4 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
   },
-});
+}));

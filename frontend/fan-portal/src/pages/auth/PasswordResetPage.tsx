@@ -99,6 +99,7 @@ export default function PasswordResetPage() {
                 </label>
                 <input
                   id="email"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
