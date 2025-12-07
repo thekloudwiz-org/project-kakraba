@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { api, Spinner, Input, Button } from '@kakraba/shared';
+import { api, Spinner, Input, Button, Toast } from '@kakraba/shared';
 import { useForm } from 'react-hook-form';
 
 interface ContentUploaderProps {
@@ -37,6 +37,7 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
   const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
   const [uploads, setUploads] = useState<Map<string, UploadProgress>>(new Map());
   const [isUploading, setIsUploading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const {
     register,
@@ -147,6 +148,9 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
         return newMap;
       });
 
+      // Show success toast
+      setToast({ message: 'Content uploaded successfully!', type: 'success' });
+
       onUploadComplete?.(contentId);
 
       // Remove from list after 3 seconds
@@ -159,16 +163,20 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
       }, 3000);
 
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
       setUploads(prev => {
         const newMap = new Map(prev);
         newMap.set(uploadId, {
           filename: file.name,
           progress: 0,
           status: 'error',
-          error: error instanceof Error ? error.message : 'Upload failed',
+          error: errorMessage,
         });
         return newMap;
       });
+
+      // Show error toast
+      setToast({ message: errorMessage, type: 'error' });
     }
   }, [onUploadComplete]);
 
@@ -195,6 +203,21 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
     reset({ title: titleFromFilename, description: '' });
   }, [reset]);
 
+  const onDropRejected = useCallback((fileRejections: any[]) => {
+    if (fileRejections.length === 0) return;
+
+    const rejection = fileRejections[0];
+    const file = rejection.file;
+    const uploadId = `${file.name}-${Date.now()}`;
+
+    setUploads(prev => new Map(prev).set(uploadId, {
+      filename: file.name,
+      progress: 0,
+      status: 'error',
+      error: 'Unsupported file type. Supported types: audio, video, PDF, images',
+    }));
+  }, []);
+
   const onSubmitMetadata = async (data: MetadataForm) => {
     if (!selectedFile) return;
 
@@ -214,6 +237,7 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    onDropRejected,
     accept: ALLOWED_FILE_TYPES,
     maxSize: MAX_FILE_SIZE,
     multiple: false,
@@ -396,6 +420,17 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
             </div>
           ))}
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+          data-testid="toast"
+        />
       )}
     </div>
   );

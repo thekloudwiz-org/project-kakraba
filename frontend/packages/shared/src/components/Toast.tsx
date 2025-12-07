@@ -6,6 +6,7 @@ export interface ToastProps {
   isVisible: boolean;
   onClose: () => void;
   duration?: number;
+  'data-testid'?: string;
 }
 
 export const Toast: React.FC<ToastProps> = ({
@@ -14,6 +15,7 @@ export const Toast: React.FC<ToastProps> = ({
   isVisible,
   onClose,
   duration = 5000,
+  'data-testid': dataTestId,
 }) => {
   useEffect(() => {
     if (isVisible && duration > 0) {
@@ -55,7 +57,7 @@ export const Toast: React.FC<ToastProps> = ({
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50 animate-slide-in">
+    <div className="fixed top-4 right-4 z-50 animate-slide-in" data-testid={dataTestId}>
       <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg ${typeStyles[type]}`} role="alert">
         {icons[type]}
         <p className="text-sm font-medium">{message}</p>

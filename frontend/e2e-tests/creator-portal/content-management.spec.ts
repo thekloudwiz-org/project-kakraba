@@ -64,19 +64,29 @@ test.describe('Content Management', () => {
 
   test('should show upload progress during file upload', async ({ page }) => {
     await page.goto('/content/upload');
-    
+
     // Upload a valid file
     const fileInput = page.locator('input[type="file"]');
     const buffer = Buffer.from('test audio content');
-    
+
     await fileInput.setInputFiles({
       name: 'test-audio.mp3',
       mimeType: 'audio/mpeg',
       buffer,
     });
-    
+
+    // Wait for metadata form to appear
+    await page.waitForSelector('input[name="title"]', { timeout: 5000 });
+
+    // Fill in metadata
+    await page.fill('input[name="title"]', 'Test Audio');
+    await page.fill('textarea[name="description"]', 'Test Description');
+
+    // Submit to start upload
+    await page.click('button[type="submit"]');
+
     // Should show progress indicator
-    await expect(page.locator('[data-testid="upload-progress"]')).toBeVisible();
+    await expect(page.locator('[data-testid="upload-progress"]')).toBeVisible({ timeout: 10000 });
   });
 
   test('should create content record after successful upload', async ({ page }) => {
@@ -106,8 +116,7 @@ test.describe('Content Management', () => {
     await page.waitForURL(/content/);
   });
 
-  test.skip('should display content library with all uploaded items', async ({ page }) => {
-    // Skip: Requires backend API integration for test data
+  test('should display content library with all uploaded items', async ({ page }) => {
     await page.goto('/content');
 
     // Should see content grid/list
@@ -119,8 +128,7 @@ test.describe('Content Management', () => {
     await expect(contentItems.first()).toBeVisible();
   });
 
-  test.skip('should display content details when clicking on item', async ({ page }) => {
-    // Skip: Requires backend API integration for test data
+  test('should display content details when clicking on item', async ({ page }) => {
     await page.goto('/content');
 
     // Click on first content item
@@ -132,8 +140,7 @@ test.describe('Content Management', () => {
     await expect(page.locator('text=/description/i')).toBeVisible();
   });
 
-  test.skip('should edit content metadata', async ({ page }) => {
-    // Skip: Requires backend API integration for test data
+  test('should edit content metadata', async ({ page }) => {
     await page.goto('/content');
     
     // Click on first content item
@@ -156,8 +163,7 @@ test.describe('Content Management', () => {
     await expect(page.locator(`text=${newTitle}`)).toBeVisible();
   });
 
-  test.skip('should delete content item with confirmation', async ({ page }) => {
-    // Skip: Requires backend API integration for test data
+  test('should delete content item with confirmation', async ({ page }) => {
     await page.goto('/content');
     
     // Get initial count
@@ -187,8 +193,7 @@ test.describe('Content Management', () => {
     expect(newCount).toBeLessThan(initialCount);
   });
 
-  test.skip('should filter content by type', async ({ page }) => {
-    // Skip: Requires backend API integration for test data
+  test('should filter content by type', async ({ page }) => {
     await page.goto('/content');
 
     // Wait for content grid to load
