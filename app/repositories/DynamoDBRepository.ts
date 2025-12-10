@@ -26,6 +26,7 @@ export class DynamoDBRepository {
    */
   private cleanDynamoDBItem<T>(item: any): T | null {
     if (!item) return null;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { PK, SK, GSI1PK, GSI1SK, ...cleanItem } = item;
     return cleanItem as T;
   }

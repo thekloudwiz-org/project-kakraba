@@ -22,7 +22,7 @@ export class ContentHandler {
 
     try {
       // Extract user ID from JWT claims
-      // @ts-ignore - AWS Lambda types don't properly type the JWT authorizer
+      // @ts-expect-error - AWS Lambda types don't properly type the JWT authorizer
       const userId = event.requestContext.authorizer?.jwt?.claims?.sub as string;
       if (!userId) {
         return this.errorResponse(401, 'Unauthorized', 'User ID not found in token');

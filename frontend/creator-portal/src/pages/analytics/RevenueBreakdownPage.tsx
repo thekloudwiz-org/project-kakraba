@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@kakraba/shared';
 
 type TimeRange = '7d' | '30d' | '90d' | '1y';
 
@@ -14,30 +13,6 @@ interface ProductRevenue {
 
 export default function RevenueBreakdownPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
-
-  const getDateRange = (range: TimeRange) => {
-    const endDate = new Date();
-    const startDate = new Date();
-    
-    switch (range) {
-      case '7d':
-        startDate.setDate(startDate.getDate() - 7);
-        break;
-      case '30d':
-        startDate.setDate(startDate.getDate() - 30);
-        break;
-      case '90d':
-        startDate.setDate(startDate.getDate() - 90);
-        break;
-      case '1y':
-        startDate.setFullYear(startDate.getFullYear() - 1);
-        break;
-    }
-    
-    return { startDate, endDate };
-  };
-
-  const { startDate, endDate } = getDateRange(timeRange);
 
   const { data: revenueData } = useQuery({
     queryKey: ['revenue-breakdown', timeRange],
