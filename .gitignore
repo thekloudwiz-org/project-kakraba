@@ -148,3 +148,29 @@ frontend/test-results/
 # Kiro Spec Files
 .kiro/*
 /.kiro/*
+
+# Blog and Development Documentation (local only)
+BLOG_POST_SUMMARY.md
+QUICK_REFERENCE.md
+ARCHITECTURE_DIAGRAM_GUIDE.md
+MERMAID_DIAGRAMS.md
+DIAGRAM_GENERATION_README.md
+GENERATED_DIAGRAMS_SUMMARY.md
+FINAL_DELIVERABLES_SUMMARY.md
+generate_architecture_diagram.py
+generate_detailed_diagrams.py
+
+# Development/Planning docs (local only)
+docs/blog-content/
+docs/development/
+
+# Generated diagram files (keep only in docs/diagrams/)
+*_high_level_architecture.png
+*_complete_services*.png
+*_content_upload*.png
+*_content_access*.png
+*_security_architecture.png
+*_dynamodb_design.png
+*_deployment_architecture.png
+kakraba_*.png
+!docs/diagrams/*.png

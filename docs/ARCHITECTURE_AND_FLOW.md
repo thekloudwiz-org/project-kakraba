@@ -2,6 +2,19 @@
 
 This document provides a comprehensive overview of the Kakraba platform's infrastructure architecture and application flow.
 
+## Architecture Diagrams
+
+For visual representations of the architecture, see the [diagrams folder](./diagrams/):
+- **[High-Level Architecture](./diagrams/1_high_level_architecture.png)** - 3-tier serverless overview
+- **[Complete AWS Services](./diagrams/2_complete_services.png)** - All AWS services and connections
+- **[Content Upload Flow](./diagrams/3_content_upload_flow.png)** - Creator workflow
+- **[Content Access Flow](./diagrams/4_content_access_flow.png)** - Fan workflow with security
+- **[Security Architecture](./diagrams/5_security_architecture.png)** - Multi-layer security
+- **[DynamoDB Design](./diagrams/6_dynamodb_design.png)** - Data model visualization
+- **[Deployment Architecture](./diagrams/7_deployment_architecture.png)** - CI/CD pipeline
+
+See [diagrams/README.md](./diagrams/README.md) for detailed diagram descriptions and usage guide.
+
 ## Table of Contents
 
 - [System Architecture](#system-architecture)
@@ -17,25 +30,25 @@ This document provides a comprehensive overview of the Kakraba platform's infras
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         Internet Users                           │
+│                         Internet Users                          │
 └────────────┬────────────────────────────────────────────────────┘
              │
              │ HTTPS
              │
     ┌────────▼──────────────────────────────────────────────┐
-    │              Route 53 DNS                              │
+    │              Route 53 DNS                             │
     │  kakraba.thekloudwiz.com                              │
     │  api-kakraba.thekloudwiz.com                          │
     └────────┬──────────────────────────────────────────────┘
              │
-             ├─────────────────────┬─────────────────────────┐
-             │                     │                         │
+             ├────────────────────┬────────────────────-──┐
+             │                    │                       │
     ┌────────▼────────┐   ┌───────▼────────┐   ┌──────────▼────────┐
     │  Website CDN    │   │  Content CDN   │   │   API Gateway     │
     │  (CloudFront)   │   │  (CloudFront)  │   │   (HTTP API)      │
     │  Public         │   │  Private       │   │   + Cognito Auth  │
     └────────┬────────┘   └───────┬────────┘   └──────────┬────────┘
-             │                     │                        │
+             │                    │                       │
     ┌────────▼────────┐   ┌───────▼────────┐   ┌──────────▼────────┐
     │  Website S3     │   │  Content S3    │   │  Lambda Functions │
     │  Static Apps    │   │  User Files    │   │  - User Mgmt      │
@@ -44,22 +57,22 @@ This document provides a comprehensive overview of the Kakraba platform's infras
     │  - Fan Portal   │   │  - PDFs        │   │  - Payment        │
     └─────────────────┘   │  - Images      │   │  - Analytics      │
                           └────────────────┘   └──────────┬────────┘
-                                                           │
-                          ┌────────────────────────────────┼────────┐
-                          │                                │        │
+                                                          │
+                          ┌───────────────────────────────┼───────-┐
+                          │                               │        │
                  ┌────────▼────────┐            ┌─────────▼──────┐ │
                  │   DynamoDB      │            │    Cognito     │ │
                  │   Single Table  │            │   User Pools   │ │
                  │   - Users       │            └────────────────┘ │
                  │   - Content     │                               │
-                 │   - Products    │            ┌─────────────────▼┐
+                 │   - Products    │            ┌──────────▼-------┐
                  │   - Access      │            │  Secrets Manager │
                  │   - Transactions│            │  - CF Private Key│
                  └─────────────────┘            │  - Stripe Keys   │
                                                 └──────────────────┘
                           ┌────────────────────────────────────────┐
                           │         External Services              │
-                          │  - Stripe (Payments)                   │
+                          │  - Stripe/Paystack (Payments)          │
                           │  - CloudWatch (Monitoring)             │
                           │  - X-Ray (Tracing)                     │
                           └────────────────────────────────────────┘
@@ -350,8 +363,8 @@ Browser uses signed URL → CloudFront validates → Serves content
      ▼
 ┌─────────────────────────────────────────────────────────┐
 │ API Gateway                                             │
-│ - Validates JWT with Cognito                           │
-│ - Extracts user info (userId, userType)                │
+│ - Validates JWT with Cognito                            │
+│ - Extracts user info (userId, userType)                 │
 │ - Routes to Lambda                                      │
 └────┬────────────────────────────────────────────────────┘
      │
@@ -360,28 +373,28 @@ Browser uses signed URL → CloudFront validates → Serves content
      ▼
 ┌─────────────────────────────────────────────────────────┐
 │ Lambda (Access Control)                                 │
-│ Step 1: Query DynamoDB for access right                │
+│ Step 1: Query DynamoDB for access right                 │
 │   PK: USER#<userId>                                     │
 │   SK: ACCESS#<productId>                                │
-│                                                          │
+│                                                         │
 │ Step 2: Validate access                                 │
 │   - Check if access right exists                        │
 │   - Check if not expired                                │
 │   - Check download quota (if DOWNLOAD intent)           │
-│                                                          │
+│                                                         │
 │ Step 3: Get content metadata                            │
 │   Query DynamoDB for content record                     │
 │   Get S3 key                                            │
-│                                                          │
+│                                                         │
 │ Step 4: Generate signed URL                             │
-│   - Get CloudFront private key from Secrets Manager    │
+│   - Get CloudFront private key from Secrets Manager     │
 │   - Create CloudFront signed URL                        │
 │   - Set 15-minute expiration                            │
 │   - Sign with key pair ID                               │
-│                                                          │
+│                                                         │
 │ Step 5: Update quota (if DOWNLOAD)                      │
 │   Decrement downloadsRemaining in DynamoDB              │
-│                                                          │
+│                                                         │
 │ Step 6: Return response                                 │
 │   {url, expiresAt, downloadsRemaining}                  │
 └────┬────────────────────────────────────────────────────┘
@@ -392,8 +405,8 @@ Browser uses signed URL → CloudFront validates → Serves content
 ┌─────────────────────────────────────────────────────────┐
 │ Fan Portal                                              │
 │ - Receives signed URL                                   │
-│ - If STREAM: Loads video player with URL               │
-│ - If DOWNLOAD: Initiates download                      │
+│ - If STREAM: Loads video player with URL                │
+│ - If DOWNLOAD: Initiates download                       │
 └────┬────────────────────────────────────────────────────┘
      │
      │ 5. Request content with signed URL
@@ -404,8 +417,8 @@ Browser uses signed URL → CloudFront validates → Serves content
 │ Content CloudFront Distribution                         │
 │ - Validates signature                                   │
 │ - Checks expiration                                     │
-│ - If valid: Fetch from S3 (or serve from cache)        │
-│ - If invalid: Return 403 Forbidden                     │
+│ - If valid: Fetch from S3 (or serve from cache)         │
+│ - If invalid: Return 403 Forbidden                      │
 └────┬────────────────────────────────────────────────────┘
      │
      │ 6. Fetch from S3 (if not cached)
@@ -413,7 +426,7 @@ Browser uses signed URL → CloudFront validates → Serves content
      ▼
 ┌─────────────────────────────────────────────────────────┐
 │ Content S3 Bucket                                       │
-│ - CloudFront uses OAI to access                        │
+│ - CloudFront uses OAI to access                         │
 │ - Returns content file                                  │
 └────┬────────────────────────────────────────────────────┘
      │
@@ -624,7 +637,13 @@ All alarms send notifications to SNS topic for email alerts.
 
 ---
 
-For more information, see:
-- [Cost Estimate](./COST_ESTIMATE.md)
-- [Usage & Contributing](./USAGE_AND_CONTRIBUTING.md)
-- [API Documentation](./API_DOCUMENTATION.md)
+## Related Documentation
+
+- **[Architecture Diagrams](./diagrams/README.md)** - Visual architecture diagrams and usage guide
+- **[Cost Estimate](./COST_ESTIMATE.md)** - AWS infrastructure cost breakdown
+- **[Usage & Contributing](./USAGE_AND_CONTRIBUTING.md)** - Setup, deployment, and contribution guidelines
+- **[API Documentation](./API_DOCUMENTATION.md)** - Complete API endpoint reference
+- **[Creator Portal Guide](./CREATOR_PORTAL_GUIDE.md)** - Guide for content creators
+- **[Fan Portal Guide](./FAN_PORTAL_GUIDE.md)** - Guide for fans
+- **[Troubleshooting](./TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Environment Variables](./ENVIRONMENT_VARIABLES.md)** - Configuration reference

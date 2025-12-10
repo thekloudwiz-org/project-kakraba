@@ -49,38 +49,18 @@ Kakraba is a comprehensive web application consisting of three distinct portals:
 
 The platform is built on AWS serverless architecture:
 
-```
-┌────────────────────────────────────────────────────────────┐
-│                    CloudFront CDN                          │
-│  ┌──────────────────┐         ┌──────────────────┐         │
-│  │  Website CDN     │         │  Content CDN     │         │
-│  │  (Public)        │         │  (Private)       │         │
-│  └────────┬─────────┘         └────────┬─────────┘         │
-└───────────┼────────────────────────────┼──────-────────────┘
-            │                            │
-    ┌───────▼────────┐            ┌──────▼────────┐
-    │  Website S3    │            │  Content S3   │
-    │  Static Apps   │            │  User Files   │
-    └────────────────┘            └───────────────┘
-            │
-            │ API Calls
-            │
-    ┌───────▼────────────────────────────────────────┐
-    │           API Gateway + Lambda                  │
-    │  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
-    │  │  User    │  │ Content  │  │ Payment  │    │
-    │  │  Mgmt    │  │   Mgmt   │  │ Service  │    │
-    │  └──────────┘  └──────────┘  └──────────┘    │
-    └────────┬───────────────────────────────────────┘
-             │
-    ┌────────▼────────┐
-    │   DynamoDB      │
-    │   Cognito       │
-    │   Stripe        │
-    └─────────────────┘
-```
+![Kakraba Architecture](./docs/diagrams/1_high_level_architecture.png)
 
-See [Architecture & Flow](./docs/ARCHITECTURE_AND_FLOW.md) for detailed information.
+**Key Components:**
+- **CloudFront CDN:** Global content delivery for website and user content
+- **S3:** Static website hosting and content storage
+- **API Gateway:** HTTP API with JWT authorization
+- **Lambda:** Serverless compute for business logic
+- **DynamoDB:** NoSQL database with single-table design
+- **Cognito:** User authentication and authorization
+- **Secrets Manager:** Secure credential storage
+
+See [Architecture & Flow](./docs/ARCHITECTURE_AND_FLOW.md) for detailed information and [Architecture Diagrams](./docs/diagrams/README.md) for all visual diagrams.
 
 ## 🚀 Quick Start
 
