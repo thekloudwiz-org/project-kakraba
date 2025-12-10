@@ -64,6 +64,19 @@ function createV2Event(body: string): APIGatewayProxyEventV2 {
   };
 }
 
+// Type guard for APIGatewayProxyResultV2 object form
+interface APIGatewayProxyStructuredResultV2 {
+  statusCode?: number;
+  headers?: { [header: string]: boolean | number | string };
+  body?: string;
+  isBase64Encoded?: boolean;
+  cookies?: string[];
+}
+
+function isStructuredResult(result: APIGatewayProxyResultV2): result is APIGatewayProxyStructuredResultV2 {
+  return typeof result === 'object' && result !== null;
+}
+
 describe('Lambda Handler Tests', () => {
   
   beforeEach(() => {
@@ -79,10 +92,13 @@ describe('Lambda Handler Tests', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body as string);
-      expect(body.error).toBe('InvalidRequest');
-      expect(body.message).toContain('product_id');
+      expect(isStructuredResult(result)).toBe(true);
+      if (isStructuredResult(result)) {
+        expect(result.statusCode).toBe(400);
+        const body = JSON.parse(result.body!);
+        expect(body.error).toBe('InvalidRequest');
+        expect(body.message).toContain('product_id');
+      }
     });
 
     it('should return 400 when user_id is missing', async () => {
@@ -93,10 +109,13 @@ describe('Lambda Handler Tests', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body as string);
-      expect(body.error).toBe('InvalidRequest');
-      expect(body.message).toContain('user_id');
+      expect(isStructuredResult(result)).toBe(true);
+      if (isStructuredResult(result)) {
+        expect(result.statusCode).toBe(400);
+        const body = JSON.parse(result.body!);
+        expect(body.error).toBe('InvalidRequest');
+        expect(body.message).toContain('user_id');
+      }
     });
 
     it('should return 400 when intent is missing', async () => {
@@ -107,10 +126,13 @@ describe('Lambda Handler Tests', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body as string);
-      expect(body.error).toBe('InvalidRequest');
-      expect(body.message).toContain('intent');
+      expect(isStructuredResult(result)).toBe(true);
+      if (isStructuredResult(result)) {
+        expect(result.statusCode).toBe(400);
+        const body = JSON.parse(result.body!);
+        expect(body.error).toBe('InvalidRequest');
+        expect(body.message).toContain('intent');
+      }
     });
 
     it('should return 400 when intent is invalid', async () => {
@@ -122,10 +144,13 @@ describe('Lambda Handler Tests', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body as string);
-      expect(body.error).toBe('InvalidRequest');
-      expect(body.message).toContain('STREAM or DOWNLOAD');
+      expect(isStructuredResult(result)).toBe(true);
+      if (isStructuredResult(result)) {
+        expect(result.statusCode).toBe(400);
+        const body = JSON.parse(result.body!);
+        expect(body.error).toBe('InvalidRequest');
+        expect(body.message).toContain('STREAM or DOWNLOAD');
+      }
     });
 
     it('should return 400 when body is malformed JSON', async () => {
@@ -133,9 +158,12 @@ describe('Lambda Handler Tests', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body as string);
-      expect(body.error).toBe('InvalidRequest');
+      expect(isStructuredResult(result)).toBe(true);
+      if (isStructuredResult(result)) {
+        expect(result.statusCode).toBe(400);
+        const body = JSON.parse(result.body!);
+        expect(body.error).toBe('InvalidRequest');
+      }
     });
 
     it('should return 400 when body is missing', async () => {
@@ -143,9 +171,12 @@ describe('Lambda Handler Tests', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body as string);
-      expect(body.error).toBe('InvalidRequest');
+      expect(isStructuredResult(result)).toBe(true);
+      if (isStructuredResult(result)) {
+        expect(result.statusCode).toBe(400);
+        const body = JSON.parse(result.body!);
+        expect(body.error).toBe('InvalidRequest');
+      }
     });
 
     it('should return 403 with "No access rights found" when user has no access', async () => {
@@ -162,10 +193,13 @@ describe('Lambda Handler Tests', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(403);
-      const body = JSON.parse(result.body as string);
-      expect(body.error).toBe('AccessDenied');
-      expect(body.message).toBe('No access rights found');
+      expect(isStructuredResult(result)).toBe(true);
+      if (isStructuredResult(result)) {
+        expect(result.statusCode).toBe(403);
+        const body = JSON.parse(result.body!);
+        expect(body.error).toBe('AccessDenied');
+        expect(body.message).toBe('No access rights found');
+      }
     });
 
     it('should return 403 with "Download limit reached" when downloads exhausted', async () => {
@@ -187,10 +221,13 @@ describe('Lambda Handler Tests', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(403);
-      const body = JSON.parse(result.body as string);
-      expect(body.error).toBe('DownloadLimitReached');
-      expect(body.message).toBe('Download limit reached');
+      expect(isStructuredResult(result)).toBe(true);
+      if (isStructuredResult(result)) {
+        expect(result.statusCode).toBe(403);
+        const body = JSON.parse(result.body!);
+        expect(body.error).toBe('DownloadLimitReached');
+        expect(body.message).toBe('Download limit reached');
+      }
     });
 
     it('should return 403 with "Subscription does not allow downloads" for subscription download attempt', async () => {
@@ -207,10 +244,13 @@ describe('Lambda Handler Tests', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(403);
-      const body = JSON.parse(result.body as string);
-      expect(body.error).toBe('AccessDenied');
-      expect(body.message).toBe('Subscription does not allow downloads');
+      expect(isStructuredResult(result)).toBe(true);
+      if (isStructuredResult(result)) {
+        expect(result.statusCode).toBe(403);
+        const body = JSON.parse(result.body!);
+        expect(body.error).toBe('AccessDenied');
+        expect(body.message).toBe('Subscription does not allow downloads');
+      }
     });
 
     it('should return 403 with "This content type requires purchase" for static content subscription attempt', async () => {
@@ -227,10 +267,13 @@ describe('Lambda Handler Tests', () => {
 
       const result = await handler(event);
 
-      expect(result.statusCode).toBe(403);
-      const body = JSON.parse(result.body as string);
-      expect(body.error).toBe('AccessDenied');
-      expect(body.message).toBe('This content type requires purchase');
+      expect(isStructuredResult(result)).toBe(true);
+      if (isStructuredResult(result)) {
+        expect(result.statusCode).toBe(403);
+        const body = JSON.parse(result.body!);
+        expect(body.error).toBe('AccessDenied');
+        expect(body.message).toBe('This content type requires purchase');
+      }
     });
   });
 
@@ -256,8 +299,8 @@ describe('Lambda Handler Tests', () => {
             const result = await handler(event);
 
             // Property: Should not fail with parsing error (400 with "Missing required parameter")
-            if (result.statusCode === 400) {
-              const body = JSON.parse(result.body as string);
+            if (isStructuredResult(result) && result.statusCode === 400) {
+              const body = JSON.parse(result.body!);
               expect(body.message).not.toContain('Missing required parameter');
               expect(body.message).not.toContain('Invalid intent');
             }
@@ -288,17 +331,20 @@ describe('Lambda Handler Tests', () => {
             const result = await handler(event);
 
             // Property: All error responses should have proper structure
-            expect(result.statusCode).toBeGreaterThanOrEqual(400);
-            expect(result.headers).toHaveProperty('Content-Type');
-            expect(result.headers?.['Content-Type']).toBe('application/json');
-            
-            const responseBody = JSON.parse(result.body as string);
-            expect(responseBody).toHaveProperty('error');
-            expect(responseBody).toHaveProperty('message');
-            expect(typeof responseBody.error).toBe('string');
-            expect(typeof responseBody.message).toBe('string');
-            expect(responseBody.error).toBeTruthy();
-            expect(responseBody.message).toBeTruthy();
+            expect(isStructuredResult(result)).toBe(true);
+            if (isStructuredResult(result)) {
+              expect(result.statusCode).toBeGreaterThanOrEqual(400);
+              expect(result.headers).toHaveProperty('Content-Type');
+              expect(result.headers?.['Content-Type']).toBe('application/json');
+              
+              const responseBody = JSON.parse(result.body!);
+              expect(responseBody).toHaveProperty('error');
+              expect(responseBody).toHaveProperty('message');
+              expect(typeof responseBody.error).toBe('string');
+              expect(typeof responseBody.message).toBe('string');
+              expect(responseBody.error).toBeTruthy();
+              expect(responseBody.message).toBeTruthy();
+            }
           }
         ),
         { numRuns: 100 }
@@ -348,19 +394,22 @@ describe('Lambda Handler Tests', () => {
             const result = await handler(event);
 
             // Property: DynamoDB errors should be caught and transformed to 500 errors
-            expect(result.statusCode).toBe(500);
-            expect(result.headers).toHaveProperty('Content-Type');
-            expect(result.headers?.['Content-Type']).toBe('application/json');
-            
-            const responseBody = JSON.parse(result.body as string);
-            expect(responseBody).toHaveProperty('error');
-            expect(responseBody).toHaveProperty('message');
-            
-            // Should not expose internal error details
-            expect(responseBody.message).not.toContain('DynamoDB');
-            expect(responseBody.message).not.toContain(errorType);
-            expect(responseBody.error).toBe('InternalServerError');
-            expect(responseBody.message).toBe('An error occurred processing your request');
+            expect(isStructuredResult(result)).toBe(true);
+            if (isStructuredResult(result)) {
+              expect(result.statusCode).toBe(500);
+              expect(result.headers).toHaveProperty('Content-Type');
+              expect(result.headers?.['Content-Type']).toBe('application/json');
+              
+              const responseBody = JSON.parse(result.body!);
+              expect(responseBody).toHaveProperty('error');
+              expect(responseBody).toHaveProperty('message');
+              
+              // Should not expose internal error details
+              expect(responseBody.message).not.toContain('DynamoDB');
+              expect(responseBody.message).not.toContain(errorType);
+              expect(responseBody.error).toBe('InternalServerError');
+              expect(responseBody.message).toBe('An error occurred processing your request');
+            }
           }
         ),
         { numRuns: 100 }
