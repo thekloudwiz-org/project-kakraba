@@ -31,6 +31,7 @@ export default function PricingConfigurator({ register, errors, watch }: Pricing
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
           <input
             {...register('price', { valueAsNumber: true })}
+            name="price"
             type="number"
             step="0.01"
             min="0.99"
@@ -40,7 +41,7 @@ export default function PricingConfigurator({ register, errors, watch }: Pricing
           />
         </div>
         {errors.price?.message && (
-          <p className="text-sm text-red-400 mt-1">{String(errors.price.message)}</p>
+          <p data-testid="price-error" className="text-sm text-red-400 mt-1">{String(errors.price.message)}</p>
         )}
         <p className="text-xs text-gray-400 mt-1">
           Minimum: $0.99 | Maximum: $10,000
@@ -52,7 +53,7 @@ export default function PricingConfigurator({ register, errors, watch }: Pricing
         <label className="block text-sm font-medium text-gray-300 mb-2">
           Access Type
         </label>
-        <div className="space-y-3">
+        <div data-testid="access-type-selector" className="space-y-3">
           <label className="flex items-start space-x-3 cursor-pointer">
             <input
               {...register('accessType')}
@@ -92,6 +93,7 @@ export default function PricingConfigurator({ register, errors, watch }: Pricing
           </label>
           <input
             {...register('downloadQuota', { valueAsNumber: true })}
+            name="downloadQuota"
             type="number"
             min="0"
             className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white"
@@ -111,6 +113,7 @@ export default function PricingConfigurator({ register, errors, watch }: Pricing
         <label className="flex items-start space-x-3 cursor-pointer">
           <input
             {...register('allowSubscription')}
+            name="allowSubscription"
             type="checkbox"
             className="mt-1"
           />

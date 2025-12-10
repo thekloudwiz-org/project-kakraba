@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { api, Spinner, Badge, Modal, Button } from '@kakraba/shared';
+import { api, Spinner, Badge, Modal, Button, Toast } from '@kakraba/shared';
 import ContentEditor from './ContentEditor';
 import ContentPreview from './ContentPreview';
 
@@ -34,14 +34,21 @@ export default function ContentLibrary() {
 
   const handleEditComplete = () => {
     setEditingContent(null);
+    setToast({ message: 'Content updated successfully!', type: 'success' });
     refetch();
   };
+
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const deleteMutation = useMutation({
     mutationFn: (contentId: string) => api.content.deleteContent(contentId),
     onSuccess: () => {
       setDeletingContent(null);
+      setToast({ message: 'Content deleted successfully!', type: 'success' });
       refetch();
+    },
+    onError: (error) => {
+      setToast({ message: error instanceof Error ? error.message : 'Failed to delete content', type: 'error' });
     },
   });
 
@@ -297,6 +304,8 @@ export default function ContentLibrary() {
         <ContentPreview
           contentId={selectedContent}
           onClose={() => setSelectedContent(null)}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
       )}
 
@@ -305,7 +314,7 @@ export default function ContentLibrary() {
         <Modal
           isOpen={true}
           onClose={() => setDeletingContent(null)}
-          title="Delete Content"
+          title="Confirm Delete"
         >
           <div className="space-y-4">
             <p className="text-white">
@@ -328,6 +337,17 @@ export default function ContentLibrary() {
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+          data-testid="toast"
+        />
       )}
     </div>
   );

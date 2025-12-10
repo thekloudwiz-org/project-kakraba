@@ -6,9 +6,17 @@ export interface ModalProps {
   title?: string;
   children: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'large';
+  'data-testid'?: string;
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 'md' }) => {
+export const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = 'md',
+  'data-testid': dataTestId,
+}) => {
   // Normalize 'large' to 'lg'
   const normalizedSize = size === 'large' ? 'lg' : size;
   useEffect(() => {
@@ -45,6 +53,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
+      data-testid={dataTestId}
     >
       <div
         className={`bg-white rounded-lg shadow-xl w-full ${sizeStyles[normalizedSize]} max-h-[90vh] overflow-y-auto`}

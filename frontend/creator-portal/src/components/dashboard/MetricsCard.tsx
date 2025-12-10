@@ -9,8 +9,11 @@ interface MetricsCardProps {
 }
 
 export default function MetricsCard({ title, value, icon, trend, trendUp }: MetricsCardProps) {
+  // Generate test ID from title
+  const testId = title.toLowerCase().replace(/\s+/g, '-');
+
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-gray-800 border-gray-700" data-testid={testId}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm text-gray-400 mb-1">{title}</p>

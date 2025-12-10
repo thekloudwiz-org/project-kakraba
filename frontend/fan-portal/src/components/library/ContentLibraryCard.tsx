@@ -35,7 +35,7 @@ export default function ContentLibraryCard({ content }: ContentLibraryCardProps)
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow" data-testid="library-content-item">
         {/* Thumbnail */}
         <div className="aspect-video bg-gray-100 flex items-center justify-center relative">
           {content.thumbnailUrl ? (
@@ -50,20 +50,20 @@ export default function ContentLibraryCard({ content }: ContentLibraryCardProps)
 
           {/* Access Type Badge */}
           <div className="absolute top-2 right-2">
-            <Badge variant={content.accessType === 'subscription' ? 'success' : 'default'}>
+            <Badge variant={content.accessType === 'subscription' ? 'success' : 'default'} data-testid="access-type">
               {content.accessType === 'subscription' ? 'Subscription' : 'Purchased'}
             </Badge>
           </div>
 
           {/* Content Type Badge */}
           <div className="absolute top-2 left-2">
-            <Badge variant="default">{content.contentType}</Badge>
+            <Badge variant="default" data-testid="content-type">{content.contentType}</Badge>
           </div>
         </div>
 
         {/* Content Info */}
         <div className="p-4">
-          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2" data-testid="content-title">
             {content.title}
           </h3>
 
@@ -77,7 +77,7 @@ export default function ContentLibraryCard({ content }: ContentLibraryCardProps)
 
           {/* Download Quota */}
           {content.downloadQuota !== undefined && (
-            <div className="mb-3 text-sm">
+            <div className="mb-3 text-sm" data-testid="download-quota">
               <div className="flex items-center justify-between text-gray-600 mb-1">
                 <span>Downloads:</span>
                 <span>
@@ -94,6 +94,9 @@ export default function ContentLibraryCard({ content }: ContentLibraryCardProps)
                   }}
                 />
               </div>
+              {!canDownload && (
+                <p className="text-xs text-red-600 mt-1">Download quota exhausted</p>
+              )}
             </div>
           )}
 
@@ -111,6 +114,7 @@ export default function ContentLibraryCard({ content }: ContentLibraryCardProps)
                 onClick={() => setShowPlayer(true)}
                 size="sm"
                 className="flex-1"
+                data-testid="stream-button"
               >
                 Play
               </Button>
@@ -124,6 +128,7 @@ export default function ContentLibraryCard({ content }: ContentLibraryCardProps)
               variant="secondary"
               className="flex-1"
               disabled={!canDownload}
+              data-testid="download-button"
             >
               Download
             </Button>

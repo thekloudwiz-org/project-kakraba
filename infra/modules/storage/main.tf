@@ -31,6 +31,24 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "content" {
   }
 }
 
+# CORS configuration for content upload from localhost and web apps
+resource "aws_s3_bucket_cors_configuration" "content" {
+  bucket = aws_s3_bucket.content.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST", "DELETE", "HEAD"]
+    allowed_origins = [
+      "http://localhost:3000",  # Landing page
+      "http://localhost:3001",  # Creator portal
+      "http://localhost:3002",  # Fan portal
+      "https://*.kakraba.com",  # Production domains
+    ]
+    expose_headers  = ["ETag", "x-amz-server-side-encryption", "x-amz-request-id", "x-amz-id-2"]
+    max_age_seconds = 3000
+  }
+}
+
 # Block all public access
 resource "aws_s3_bucket_public_access_block" "content" {
   bucket = aws_s3_bucket.content.id

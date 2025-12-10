@@ -48,6 +48,7 @@ export default function ExportButton({ startDate, endDate }: ExportButtonProps) 
       onClick={handleExport}
       isLoading={isExporting}
       variant="secondary"
+      data-testid="export-button"
     >
       <svg
         className="w-4 h-4 mr-2"

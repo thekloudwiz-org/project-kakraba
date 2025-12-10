@@ -63,7 +63,7 @@ export default function PurchaseHistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" data-testid="purchase-history">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Purchase History</h1>
@@ -82,6 +82,8 @@ export default function PurchaseHistoryPage() {
                     setFilter(type);
                     setPage(1);
                   }}
+                  data-testid={type === 'all' ? undefined : 'type-filter'}
+                  value={type.toUpperCase()}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     filter === type
                       ? 'bg-purple-600 text-white'
@@ -106,6 +108,7 @@ export default function PurchaseHistoryPage() {
               <div
                 key={purchase.transactionId}
                 className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                data-testid="transaction-row"
               >
                 <div className="flex items-start justify-between">
                   {/* Purchase Info */}
@@ -117,15 +120,15 @@ export default function PurchaseHistoryPage() {
                         className="w-20 h-20 object-cover rounded"
                       />
                     )}
-                    <div className="flex-1">
+                    <div className="flex-1" data-testid="transaction-details">
                       <div className="flex items-center space-x-2 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-gray-900" data-testid="product-name">
                           {purchase.itemTitle}
                         </h3>
-                        {getTypeBadge(purchase.type)}
+                        <span data-testid="transaction-type">{getTypeBadge(purchase.type)}</span>
                         {getStatusBadge(purchase.status)}
                       </div>
-                      
+
                       <p className="text-sm text-gray-600 mb-2">
                         by {purchase.creatorName}
                       </p>
@@ -135,14 +138,14 @@ export default function PurchaseHistoryPage() {
                           Order ID: <span className="font-mono">{purchase.transactionId}</span>
                         </span>
                         <span>•</span>
-                        <span>{new Date(purchase.purchaseDate).toLocaleDateString()}</span>
+                        <span data-testid="transaction-date">{new Date(purchase.purchaseDate).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Amount */}
                   <div className="text-right ml-4">
-                    <div className="text-2xl font-bold text-gray-900">
+                    <div className="text-2xl font-bold text-gray-900" data-testid="transaction-amount">
                       ${purchase.amount.toFixed(2)}
                     </div>
                     {purchase.type === 'subscription' && (

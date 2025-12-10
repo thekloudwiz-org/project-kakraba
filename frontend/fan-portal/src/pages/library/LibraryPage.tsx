@@ -17,6 +17,7 @@ interface Content extends BaseContent {
 export default function LibraryPage() {
   const [filter, setFilter] = useState<ContentFilter>('all');
   const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
 
   interface LibraryResponse extends PaginatedResponse<Content> {
     totalPages: number;
@@ -34,12 +35,46 @@ export default function LibraryPage() {
     },
   });
 
+  // Filter content items based on search query
+  const filteredContent = library?.items.filter((content: Content) => {
+    if (!searchQuery.trim()) return true;
+
+    const query = searchQuery.toLowerCase();
+    const title = content.title?.toLowerCase() || '';
+    const description = content.description?.toLowerCase() || '';
+    const creatorName = content.creatorName?.toLowerCase() || '';
+
+    return title.includes(query) || description.includes(query) || creatorName.includes(query);
+  }) || [];
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" data-testid="content-library">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">My Library</h1>
           <p className="text-gray-600">Access all your purchased and subscribed content</p>
+        </div>
+
+        {/* Search */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+          <div className="relative">
+            <svg
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              data-testid="library-search"
+              placeholder="Search by title, description, or creator..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+          </div>
         </div>
 
         {/* Filters */}
@@ -54,6 +89,7 @@ export default function LibraryPage() {
                     setFilter(type);
                     setPage(1);
                   }}
+                  data-testid={type === 'all' ? undefined : 'content-type-filter'}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     filter === type
                       ? 'bg-purple-600 text-white'
@@ -72,10 +108,10 @@ export default function LibraryPage() {
           <div className="flex items-center justify-center py-12">
             <Spinner />
           </div>
-        ) : library && library.items.length > 0 ? (
+        ) : library && filteredContent.length > 0 ? (
           <div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {library.items.map((content: Content) => (
+              {filteredContent.map((content: Content) => (
                 <ContentLibraryCard key={content.contentId} content={content} />
               ))}
             </div>
@@ -107,19 +143,40 @@ export default function LibraryPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                {searchQuery.trim() ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                )}
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Your library is empty</h3>
-            <p className="text-gray-600 mb-6">
-              Purchase content or subscribe to creators to build your library
-            </p>
-            <button
-              onClick={() => window.location.href = '/discover'}
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              Discover Content
-            </button>
+            {searchQuery.trim() ? (
+              <>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No results found</h3>
+                <p className="text-gray-600 mb-6">
+                  No content matches "{searchQuery}". Try a different search term.
+                </p>
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  Clear Search
+                </button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Your library is empty</h3>
+                <p className="text-gray-600 mb-6">
+                  Purchase content or subscribe to creators to build your library
+                </p>
+                <button
+                  onClick={() => window.location.href = '/discover'}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  Discover Content
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

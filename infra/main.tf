@@ -1,5 +1,4 @@
 # Data source to fetch Route53 hosted zone ID dynamically
-# Updated: 2025-12-10 - Documentation and diagrams added
 data "aws_route53_zone" "main" {
   count = var.custom_domain_name != "" && var.route53_zone_name != "" ? 1 : 0
   name  = var.route53_zone_name

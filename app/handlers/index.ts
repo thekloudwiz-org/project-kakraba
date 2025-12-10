@@ -3,6 +3,7 @@ import { DynamoDBRepository } from '../repositories/DynamoDBRepository';
 import { AccessValidator } from '../services/AccessValidator';
 import { SignedUrlGenerator } from '../services/SignedUrlGenerator';
 import { ContentHandler } from './contentHandler';
+import { ProductHandler } from './productHandler';
 import { AccessRequest, AccessResponse, ErrorResponse, Intent, Config } from '../types';
 
 // Load configuration from environment variables
@@ -25,6 +26,7 @@ const urlGenerator = new SignedUrlGenerator(
   config.cloudfrontPrivateKeySecretArn
 );
 const contentHandler = new ContentHandler(bucketName, config.tableName);
+const productHandler = new ProductHandler(config.tableName);
 
 /**
  * Lambda handler for API Gateway requests
@@ -38,6 +40,11 @@ export const handler = async (
   const path = event.rawPath;
 
   try {
+    // Route product management requests
+    if (path.startsWith('/products')) {
+      return await productHandler.handle(event);
+    }
+
     // Route content management requests
     if (path.startsWith('/content')) {
       return await contentHandler.handle(event);

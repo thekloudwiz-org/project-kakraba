@@ -21,14 +21,22 @@ export async function waitForApiResponse(
   );
 }
 
-export async function waitForToast(page: Page, message?: string) {
+export async function waitForToast(page: Page, message?: string | RegExp) {
   const toastSelector = '[data-testid="toast"]';
-  await page.waitForSelector(toastSelector, { timeout: 5000 });
-  
+  const toast = await page.waitForSelector(toastSelector, { timeout: 5000 });
+
   if (message) {
-    await page.waitForSelector(`${toastSelector}:has-text("${message}")`, {
-      timeout: 5000,
-    });
+    if (typeof message === 'string') {
+      await page.waitForSelector(`${toastSelector}:has-text("${message}")`, {
+        timeout: 5000,
+      });
+    } else {
+      // For regex, check the toast content
+      const text = await toast?.textContent();
+      if (!text || !message.test(text)) {
+        throw new Error(`Toast message does not match pattern: ${message}`);
+      }
+    }
   }
 }
 

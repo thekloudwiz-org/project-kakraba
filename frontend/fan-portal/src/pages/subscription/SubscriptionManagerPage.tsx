@@ -25,7 +25,7 @@ export default function SubscriptionManagerPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" data-testid="subscription-manager">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">My Subscriptions</h1>
@@ -37,6 +37,8 @@ export default function SubscriptionManagerPage() {
           <div className="flex items-center space-x-4">
             <button
               onClick={() => setShowCancelled(false)}
+              data-testid="status-filter"
+              value="ACTIVE"
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 !showCancelled
                   ? 'bg-purple-600 text-white'

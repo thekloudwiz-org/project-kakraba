@@ -74,6 +74,7 @@ export default function AnalyticsPage() {
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value as TimeRange)}
                 className="px-4 py-2 bg-gray-800 text-white rounded-lg border border-gray-700"
+                data-testid="time-range-selector"
               >
                 <option value="7d">Last 7 days</option>
                 <option value="30d">Last 30 days</option>

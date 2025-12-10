@@ -82,7 +82,7 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
 
     try {
       // Step 1: Get presigned URL
-      const { uploadUrl, contentId } = await api.content.getUploadUrl({
+      const { uploadUrl, contentId, s3Key } = await api.content.getUploadUrl({
         filename: file.name,
         contentType: file.type,
         fileSize: file.size,
@@ -90,7 +90,7 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
 
       // Step 2: Upload to S3
       const xhr = new XMLHttpRequest();
-      
+
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable) {
           const progress = Math.round((e.loaded / e.total) * 100);
@@ -120,12 +120,6 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
       });
 
       // Step 3: Create content record
-      const { s3Key } = await api.content.getUploadUrl({
-        filename: file.name,
-        contentType: file.type,
-        fileSize: file.size,
-      });
-      
       await api.content.createContent({
         contentId,
         title,
@@ -163,6 +157,7 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
       }, 3000);
 
     } catch (error) {
+      console.error('Upload error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
       setUploads(prev => {
         const newMap = new Map(prev);

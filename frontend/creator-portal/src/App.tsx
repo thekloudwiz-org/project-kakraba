@@ -9,6 +9,9 @@ const PasswordResetPage = lazy(() => import('./pages/auth/PasswordResetPage'));
 const EmailVerificationPage = lazy(() => import('./pages/auth/EmailVerificationPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
+const FanEngagementPage = lazy(() => import('./pages/analytics/FanEngagementPage'));
+const RevenueBreakdownPage = lazy(() => import('./pages/analytics/RevenueBreakdownPage'));
+const SubscriptionMetricsPage = lazy(() => import('./pages/analytics/SubscriptionMetricsPage'));
 const ContentLibraryPage = lazy(() => import('./pages/ContentLibraryPage'));
 const ContentUploadPage = lazy(() => import('./pages/ContentUploadPage'));
 const ProductCatalogPage = lazy(() => import('./pages/ProductCatalogPage'));
@@ -45,6 +48,9 @@ function App() {
         {/* Protected routes */}
         <Route path="/dashboard" element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" />} />
         <Route path="/analytics" element={isAuthenticated ? <AnalyticsPage /> : <Navigate to="/login" />} />
+        <Route path="/analytics/fans" element={isAuthenticated ? <FanEngagementPage /> : <Navigate to="/login" />} />
+        <Route path="/analytics/revenue" element={isAuthenticated ? <RevenueBreakdownPage /> : <Navigate to="/login" />} />
+        <Route path="/analytics/subscriptions" element={isAuthenticated ? <SubscriptionMetricsPage /> : <Navigate to="/login" />} />
         <Route path="/content" element={isAuthenticated ? <ContentLibraryPage /> : <Navigate to="/login" />} />
         <Route path="/content/upload" element={isAuthenticated ? <ContentUploadPage /> : <Navigate to="/login" />} />
         <Route path="/products" element={isAuthenticated ? <ProductCatalogPage /> : <Navigate to="/login" />} />

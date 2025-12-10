@@ -1,25 +1,27 @@
 import { useQuery } from '@tanstack/react-query';
-import { api, Modal, Spinner, Badge } from '@kakraba/shared';
+import { api, Modal, Spinner, Badge, Button } from '@kakraba/shared';
 
 interface ContentPreviewProps {
   contentId: string;
   onClose: () => void;
+  onEdit?: (contentId: string) => void;
+  onDelete?: (contentId: string) => void;
 }
 
-export default function ContentPreview({ contentId, onClose }: ContentPreviewProps) {
+export default function ContentPreview({ contentId, onClose, onEdit, onDelete }: ContentPreviewProps) {
   const { data: content, isLoading } = useQuery({
     queryKey: ['content', contentId],
     queryFn: () => api.content.getContent(contentId),
   });
 
   return (
-    <Modal isOpen={true} onClose={onClose} title="Content Preview">
+    <Modal isOpen={true} onClose={onClose} title="Content Preview" data-testid="content-details">
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <Spinner />
         </div>
       ) : content ? (
-        <div className="space-y-4" data-testid="content-details">
+        <div className="space-y-4">
           {/* Thumbnail/Preview */}
           <div className="aspect-video bg-gray-700 rounded-lg flex items-center justify-center">
             {content.thumbnailUrl ? (
@@ -73,6 +75,36 @@ export default function ContentPreview({ contentId, onClose }: ContentPreviewPro
               )}
             </div>
           </div>
+
+          {/* Action Buttons */}
+          {(onEdit || onDelete) && (
+            <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-700">
+              {onEdit && (
+                <Button
+                  data-testid="edit-button"
+                  onClick={() => {
+                    onClose();
+                    onEdit(contentId);
+                  }}
+                  variant="secondary"
+                >
+                  Edit
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  data-testid="delete-button"
+                  onClick={() => {
+                    onClose();
+                    onDelete(contentId);
+                  }}
+                  variant="danger"
+                >
+                  Delete
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       ) : (
         <div className="text-center py-12 text-gray-400">

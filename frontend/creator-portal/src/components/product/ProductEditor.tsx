@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { api, Modal, Button, Spinner } from '@kakraba/shared';
+import { api, Modal, Button, Spinner, Toast } from '@kakraba/shared';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,6 +21,9 @@ interface ProductEditorProps {
 }
 
 export default function ProductEditor({ productId, onClose, onSave }: ProductEditorProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', productId],
     queryFn: () => api.product.getProduct(productId),
@@ -50,13 +53,43 @@ export default function ProductEditor({ productId, onClose, onSave }: ProductEdi
     mutationFn: (data: ProductFormData) =>
       api.product.updateProduct(productId, data),
     onSuccess: () => {
-      onSave();
-      onClose();
+      setToast({ message: 'Product updated successfully!', type: 'success' });
+      setTimeout(() => {
+        onSave();
+        onClose();
+      }, 1000);
+    },
+    onError: (error) => {
+      setToast({
+        message: error instanceof Error ? error.message : 'Failed to update product',
+        type: 'error'
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => api.product.deleteProduct(productId),
+    onSuccess: () => {
+      setToast({ message: 'Product deleted successfully!', type: 'success' });
+      setTimeout(() => {
+        onSave();
+        onClose();
+      }, 1000);
+    },
+    onError: (error) => {
+      setToast({
+        message: error instanceof Error ? error.message : 'Failed to delete product',
+        type: 'error'
+      });
     },
   });
 
   const onSubmit = (data: ProductFormData) => {
     updateMutation.mutate(data);
+  };
+
+  const handleDelete = () => {
+    deleteMutation.mutate();
   };
 
   return (
@@ -73,6 +106,7 @@ export default function ProductEditor({ productId, onClose, onSave }: ProductEdi
             </label>
             <input
               {...register('title')}
+              name="title"
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
               placeholder="Product title"
             />
@@ -87,6 +121,7 @@ export default function ProductEditor({ productId, onClose, onSave }: ProductEdi
             </label>
             <textarea
               {...register('description')}
+              name="description"
               rows={4}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
               placeholder="Product description"
@@ -104,6 +139,7 @@ export default function ProductEditor({ productId, onClose, onSave }: ProductEdi
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
               <input
                 {...register('price', { valueAsNumber: true })}
+                name="price"
                 type="number"
                 step="0.01"
                 min="0.99"
@@ -129,18 +165,71 @@ export default function ProductEditor({ productId, onClose, onSave }: ProductEdi
             </p>
           </div>
 
-          <div className="flex items-center justify-end space-x-3 pt-4">
-            <Button variant="secondary" onClick={onClose} type="button">
-              Cancel
-            </Button>
+          <div className="flex items-center justify-between pt-4 border-t border-gray-700">
             <Button
-              type="submit"
-              isLoading={updateMutation.isPending}
+              variant="danger"
+              onClick={() => setShowDeleteConfirm(true)}
+              type="button"
+              data-testid="delete-button"
             >
-              Save Changes
+              Delete Product
             </Button>
+            <div className="flex items-center space-x-3">
+              <Button variant="secondary" onClick={onClose} type="button">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                isLoading={updateMutation.isPending}
+              >
+                Save Changes
+              </Button>
+            </div>
           </div>
         </form>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <Modal
+          isOpen={true}
+          onClose={() => setShowDeleteConfirm(false)}
+          title="Confirm Delete"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-300">
+              Are you sure you want to delete this product? This action cannot be undone.
+            </p>
+            <div className="flex items-center justify-end space-x-3">
+              <Button
+                variant="secondary"
+                onClick={() => setShowDeleteConfirm(false)}
+                type="button"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleDelete}
+                isLoading={deleteMutation.isPending}
+                type="button"
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+          data-testid="toast"
+        />
       )}
     </Modal>
   );

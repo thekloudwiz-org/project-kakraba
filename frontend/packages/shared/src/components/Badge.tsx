@@ -5,9 +5,16 @@ export interface BadgeProps {
   variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'secondary' | 'destructive';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  'data-testid'?: string;
 }
 
-export const Badge: React.FC<BadgeProps> = ({ children, variant = 'default', size = 'md', className = '' }) => {
+export const Badge: React.FC<BadgeProps> = ({
+  children,
+  variant = 'default',
+  size = 'md',
+  className = '',
+  'data-testid': dataTestId,
+}) => {
   const variantStyles = {
     default: 'bg-gray-100 text-gray-800',
     success: 'bg-green-100 text-green-800',
@@ -26,6 +33,7 @@ export const Badge: React.FC<BadgeProps> = ({ children, variant = 'default', siz
 
   return (
     <span
+      data-testid={dataTestId}
       className={`
         inline-flex items-center font-medium rounded-full
         ${variantStyles[variant]}

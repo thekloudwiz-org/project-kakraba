@@ -21,6 +21,16 @@ export class DynamoDBRepository {
   }
 
   /**
+   * Remove DynamoDB-specific fields from items
+   * Strips PK, SK, and GSI keys to return clean domain objects
+   */
+  private cleanDynamoDBItem<T>(item: any): T | null {
+    if (!item) return null;
+    const { PK, SK, GSI1PK, GSI1SK, ...cleanItem } = item;
+    return cleanItem as T;
+  }
+
+  /**
    * Get user's access right to a specific product
    * @param userId User ID
    * @param productId Product ID
@@ -181,7 +191,7 @@ export class DynamoDBRepository {
         })
       );
 
-      return (response.Item as ContentMetadata) || null;
+      return this.cleanDynamoDBItem<ContentMetadata>(response.Item);
     } catch (error) {
       console.error('Error getting content:', error);
       throw new Error('Failed to retrieve content');
@@ -214,7 +224,7 @@ export class DynamoDBRepository {
       const response = await this.docClient.send(new QueryCommand(params));
 
       return {
-        items: (response.Items as ContentMetadata[]) || [],
+        items: (response.Items || []).map(item => this.cleanDynamoDBItem<ContentMetadata>(item)).filter((item): item is ContentMetadata => item !== null),
       };
     } catch (error) {
       console.error('Error listing content:', error);

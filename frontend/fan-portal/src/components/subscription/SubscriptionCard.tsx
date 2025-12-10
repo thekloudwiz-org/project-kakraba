@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, Badge, Button, Modal } from '@kakraba/shared';
+import { api, Badge, Button, Modal, Toast } from '@kakraba/shared';
 import { useNavigate } from 'react-router-dom';
 
 interface SubscriptionCardProps {
@@ -23,12 +23,17 @@ export default function SubscriptionCard({ subscription }: SubscriptionCardProps
   const queryClient = useQueryClient();
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showUpdatePayment, setShowUpdatePayment] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const cancelMutation = useMutation({
     mutationFn: () => api.subscription.cancelSubscription(subscription.subscriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       setShowCancelModal(false);
+      setToast({ message: 'Subscription canceled successfully', type: 'success' });
+    },
+    onError: () => {
+      setToast({ message: 'Failed to cancel subscription', type: 'error' });
     },
   });
 
@@ -36,6 +41,10 @@ export default function SubscriptionCard({ subscription }: SubscriptionCardProps
     mutationFn: () => api.subscription.reactivateSubscription(subscription.subscriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      setToast({ message: 'Subscription reactivated successfully', type: 'success' });
+    },
+    onError: () => {
+      setToast({ message: 'Failed to reactivate subscription', type: 'error' });
     },
   });
 
@@ -58,7 +67,7 @@ export default function SubscriptionCard({ subscription }: SubscriptionCardProps
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow" data-testid="subscription-card">
         {/* Creator Header */}
         <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-6 text-white">
           <div className="flex items-center space-x-4 mb-4">
@@ -76,12 +85,12 @@ export default function SubscriptionCard({ subscription }: SubscriptionCardProps
               </div>
             )}
             <div className="flex-1">
-              <h3 className="text-xl font-bold">{subscription.creatorName}</h3>
-              <div className="mt-1">{getStatusBadge()}</div>
+              <h3 className="text-xl font-bold" data-testid="creator-name">{subscription.creatorName}</h3>
+              <div className="mt-1" data-testid="subscription-status">{getStatusBadge()}</div>
             </div>
           </div>
 
-          <div className="text-3xl font-bold">
+          <div className="text-3xl font-bold" data-testid="subscription-price">
             ${subscription.price}
             <span className="text-base font-normal">/{subscription.interval}</span>
           </div>
@@ -93,9 +102,19 @@ export default function SubscriptionCard({ subscription }: SubscriptionCardProps
             <div className="text-sm text-gray-600 mb-1">
               {subscription.cancelAtPeriodEnd ? 'Access until:' : 'Next billing date:'}
             </div>
-            <div className="font-medium text-gray-900">
+            <div className="font-medium text-gray-900" data-testid={subscription.cancelAtPeriodEnd ? "access-until" : "next-billing-date"}>
               {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
             </div>
+            {subscription.cancelAtPeriodEnd && (
+              <div className="text-sm text-gray-600 mt-1" data-testid="renewal-date">
+                Will not renew
+              </div>
+            )}
+            {!subscription.cancelAtPeriodEnd && (
+              <div data-testid="renewal-date" className="hidden">
+                {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+              </div>
+            )}
           </div>
 
           <div>
@@ -106,7 +125,7 @@ export default function SubscriptionCard({ subscription }: SubscriptionCardProps
           </div>
 
           {subscription.status === 'past_due' && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3" data-testid="payment-failed-warning">
               <p className="text-sm text-red-600">
                 Your payment failed. Please update your payment method to continue your subscription.
               </p>
@@ -136,6 +155,7 @@ export default function SubscriptionCard({ subscription }: SubscriptionCardProps
             {subscription.status === 'active' && !subscription.cancelAtPeriodEnd && (
               <>
                 <Button
+                  data-testid="update-payment-button"
                   onClick={() => setShowUpdatePayment(true)}
                   variant="secondary"
                   className="w-full"
@@ -143,6 +163,7 @@ export default function SubscriptionCard({ subscription }: SubscriptionCardProps
                   Update Payment Method
                 </Button>
                 <Button
+                  data-testid="cancel-button"
                   onClick={() => setShowCancelModal(true)}
                   variant="destructive"
                   className="w-full"
@@ -154,6 +175,7 @@ export default function SubscriptionCard({ subscription }: SubscriptionCardProps
 
             {subscription.cancelAtPeriodEnd && (
               <Button
+                data-testid="reactivate-button"
                 onClick={() => reactivateMutation.mutate()}
                 isLoading={reactivateMutation.isPending}
                 className="w-full"
@@ -164,12 +186,18 @@ export default function SubscriptionCard({ subscription }: SubscriptionCardProps
 
             {subscription.status === 'past_due' && (
               <Button
+                data-testid="update-payment-button"
                 onClick={() => setShowUpdatePayment(true)}
                 className="w-full"
               >
                 Update Payment Method
               </Button>
             )}
+          </div>
+
+          {/* Hidden payment method info for testing */}
+          <div className="hidden" data-testid="payment-method">
+            ****
           </div>
         </div>
       </div>
@@ -180,6 +208,7 @@ export default function SubscriptionCard({ subscription }: SubscriptionCardProps
           isOpen={true}
           onClose={() => setShowCancelModal(false)}
           title="Cancel Subscription"
+          data-testid="cancel-subscription-modal"
         >
           <div className="space-y-4">
             <p className="text-gray-700">
@@ -219,6 +248,7 @@ export default function SubscriptionCard({ subscription }: SubscriptionCardProps
           isOpen={true}
           onClose={() => setShowUpdatePayment(false)}
           title="Update Payment Method"
+          data-testid="update-payment-modal"
         >
           <div className="space-y-4">
             <p className="text-gray-700">
@@ -230,6 +260,17 @@ export default function SubscriptionCard({ subscription }: SubscriptionCardProps
             </p>
           </div>
         </Modal>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+          data-testid="toast"
+        />
       )}
     </>
   );

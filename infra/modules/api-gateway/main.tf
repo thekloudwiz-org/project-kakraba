@@ -99,6 +99,47 @@ resource "aws_apigatewayv2_route" "content_delete" {
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
 }
 
+# Product Management Routes
+resource "aws_apigatewayv2_route" "product_create" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "POST /products"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "product_list" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /products"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "product_get" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /products/{productId}"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "product_update" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "PUT /products/{productId}"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "product_delete" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "DELETE /products/{productId}"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
 # Default stage with auto-deploy
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.main.id

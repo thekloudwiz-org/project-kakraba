@@ -35,8 +35,8 @@ export default function ContentSelector({ selectedIds, onSelectionChange }: Cont
   const totalPages = Math.ceil((contentData?.total || 0) / 12);
 
   return (
-    <div className="space-y-4">
-      <div className="text-sm text-gray-400">
+    <div data-testid="content-selector" className="space-y-4">
+      <div data-testid="selected-content" className="text-sm text-gray-400">
         {selectedIds.length} item(s) selected
       </div>
 
@@ -47,6 +47,7 @@ export default function ContentSelector({ selectedIds, onSelectionChange }: Cont
           return (
             <div
               key={item.contentId}
+              data-testid="content-item"
               onClick={() => handleToggle(item.contentId)}
               className={`
                 bg-gray-900 rounded-lg p-4 cursor-pointer transition-all

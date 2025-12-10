@@ -22,7 +22,7 @@ export default function ContentPerformanceTable() {
       <h3 className="text-xl font-bold text-white mb-6">Content Performance</h3>
 
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full" data-testid="content-performance-table">
           <thead>
             <tr className="border-b border-gray-700">
               <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">

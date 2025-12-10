@@ -35,7 +35,7 @@ export default function RevenueChart() {
   const maxRevenue = Math.max(...(revenueData?.map((d) => d.revenue) || [1]));
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+    <div className="bg-gray-800 rounded-lg p-6 border border-gray-700" data-testid="revenue-chart">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-white">Revenue Trends</h3>
         <div className="flex gap-2">
@@ -52,6 +52,7 @@ export default function RevenueChart() {
             value={granularity}
             onChange={(e) => setGranularity(e.target.value as Granularity)}
             className="px-3 py-1 bg-gray-700 text-white rounded-lg text-sm border border-gray-600"
+            data-testid={`view-${granularity}`}
           >
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
@@ -61,7 +62,7 @@ export default function RevenueChart() {
       </div>
 
       {/* Simple bar chart */}
-      <div className="space-y-3">
+      <div className="space-y-3" data-testid="chart-bars">
         {revenueData?.map((dataPoint, index) => (
           <div key={index} className="flex items-center gap-3">
             <div className="text-xs text-gray-400 w-24">

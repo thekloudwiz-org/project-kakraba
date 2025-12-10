@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api, Spinner, Badge } from '@kakraba/shared';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { api, Spinner, Badge, Modal, Button, Toast } from '@kakraba/shared';
 import ProductEditor from './ProductEditor';
+import ProductDetails from './ProductDetails';
 
 type SortBy = 'newest' | 'oldest' | 'price-low' | 'price-high';
 
@@ -9,6 +10,9 @@ export default function ProductCatalog() {
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortBy>('newest');
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
+  const [viewingProduct, setViewingProduct] = useState<string | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const { data: productData, isLoading, refetch } = useQuery({
     queryKey: ['products', page, sortBy],
@@ -18,13 +22,40 @@ export default function ProductCatalog() {
     }),
   });
 
+  const handleView = (productId: string) => {
+    setViewingProduct(productId);
+  };
+
   const handleEdit = (productId: string) => {
     setEditingProduct(productId);
   };
 
+  const handleDelete = (productId: string) => {
+    setDeletingProduct(productId);
+  };
+
   const handleEditComplete = () => {
     setEditingProduct(null);
+    setToast({ message: 'Product updated successfully!', type: 'success' });
     refetch();
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: (productId: string) => api.product.deleteProduct(productId),
+    onSuccess: () => {
+      setDeletingProduct(null);
+      setToast({ message: 'Product deleted successfully!', type: 'success' });
+      refetch();
+    },
+    onError: (error) => {
+      setToast({ message: error instanceof Error ? error.message : 'Failed to delete product', type: 'error' });
+    },
+  });
+
+  const confirmDelete = () => {
+    if (deletingProduct) {
+      deleteMutation.mutate(deletingProduct);
+    }
   };
 
   if (isLoading) {
@@ -66,11 +97,13 @@ export default function ProductCatalog() {
           <p className="text-gray-400">No products found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div data-testid="product-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product) => (
             <div
               key={product.productId}
-              className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden hover:border-purple-500 transition-colors"
+              data-testid="product-card"
+              onClick={() => handleView(product.productId)}
+              className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden hover:border-purple-500 transition-colors cursor-pointer"
             >
               {/* Product Info */}
               <div className="p-6">
@@ -90,7 +123,7 @@ export default function ProductCatalog() {
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-400">Price</span>
-                    <span className="text-white font-semibold">${product.price}</span>
+                    <span data-testid="product-price" className="text-white font-semibold">${product.price}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-400">Type</span>
@@ -98,7 +131,7 @@ export default function ProductCatalog() {
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-400">Access</span>
-                    <span className="text-white">{product.accessType}</span>
+                    <span data-testid="access-type" className="text-white">{product.accessType}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-400">Content Items</span>
@@ -117,12 +150,30 @@ export default function ProductCatalog() {
                 </div>
 
                 {/* Actions */}
-                <button
-                  onClick={() => handleEdit(product.productId)}
-                  className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  Edit Product
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    data-testid="edit-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(product.productId);
+                    }}
+                    className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    data-testid="delete-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(product.productId);
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -152,12 +203,63 @@ export default function ProductCatalog() {
         </div>
       )}
 
+      {/* Product Details Modal */}
+      {viewingProduct && (
+        <ProductDetails
+          productId={viewingProduct}
+          onClose={() => setViewingProduct(null)}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
+
       {/* Edit Modal */}
       {editingProduct && (
         <ProductEditor
           productId={editingProduct}
           onClose={() => setEditingProduct(null)}
           onSave={handleEditComplete}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingProduct && (
+        <Modal
+          isOpen={true}
+          onClose={() => setDeletingProduct(null)}
+          title="Confirm Delete"
+        >
+          <div className="space-y-4">
+            <p className="text-white">
+              Are you sure you want to delete this product? This action cannot be undone.
+            </p>
+            <div className="flex items-center justify-end space-x-3">
+              <Button
+                variant="secondary"
+                onClick={() => setDeletingProduct(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={confirmDelete}
+                isLoading={deleteMutation.isPending}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+          data-testid="toast"
         />
       )}
     </div>

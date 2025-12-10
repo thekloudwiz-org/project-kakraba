@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./pages/HomePage'));
+const DiscoveryPage = lazy(() => import('./pages/DiscoveryPage'));
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 const PasswordResetPage = lazy(() => import('./pages/auth/PasswordResetPage'));
@@ -42,11 +43,11 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/reset-password" element={<PasswordResetPage />} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-              <Route path="/discover" element={<HomePage />} />
+              <Route path="/discover" element={<ProtectedRoute><DiscoveryPage /></ProtectedRoute>} />
               <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />
               <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-              <Route path="/creator/:id" element={<CreatorProfilePage />} />
-              <Route path="/product/:id" element={<ProductDetailPage />} />
+              <Route path="/creator/:userId" element={<CreatorProfilePage />} />
+              <Route path="/product/:productId" element={<ProductDetailPage />} />
               <Route path="/subscriptions" element={<ProtectedRoute><SubscriptionManagerPage /></ProtectedRoute>} />
               <Route path="/purchases" element={<ProtectedRoute><PurchaseHistoryPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

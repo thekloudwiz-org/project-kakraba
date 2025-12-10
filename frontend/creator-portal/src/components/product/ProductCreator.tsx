@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { api, Button } from '@kakraba/shared';
+import { api, Button, Toast } from '@kakraba/shared';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,6 +27,7 @@ export default function ProductCreator() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<Step>('details');
   const [selectedContentIds, setSelectedContentIds] = useState<string[]>([]);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const {
     register,
@@ -47,7 +48,16 @@ export default function ProductCreator() {
   const createMutation = useMutation({
     mutationFn: (data: ProductFormData) => api.product.createProduct(data),
     onSuccess: () => {
-      navigate('/products');
+      setToast({ message: 'Product created successfully!', type: 'success' });
+      setTimeout(() => {
+        navigate('/products');
+      }, 1000);
+    },
+    onError: (error) => {
+      setToast({
+        message: error instanceof Error ? error.message : 'Failed to create product',
+        type: 'error'
+      });
     },
   });
 
@@ -126,6 +136,7 @@ export default function ProductCreator() {
               </label>
               <input
                 {...register('title')}
+                name="title"
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white"
                 placeholder="Enter product title"
               />
@@ -140,6 +151,7 @@ export default function ProductCreator() {
               </label>
               <textarea
                 {...register('description')}
+                name="description"
                 rows={4}
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white"
                 placeholder="Describe your product"
@@ -220,21 +232,41 @@ export default function ProductCreator() {
             variant="secondary"
             onClick={handleBack}
             disabled={currentStepIndex === 0}
+            data-testid="back-button"
           >
             Back
           </Button>
 
           {currentStep !== 'review' ? (
-            <Button type="button" onClick={handleNext}>
+            <Button
+              type="button"
+              onClick={handleNext}
+              data-testid="next-button"
+            >
               Next
             </Button>
           ) : (
-            <Button type="submit" isLoading={createMutation.isPending}>
+            <Button
+              type="submit"
+              isLoading={createMutation.isPending}
+              data-testid="create-product-button"
+            >
               Create Product
             </Button>
           )}
         </div>
       </form>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+          data-testid="toast"
+        />
+      )}
     </div>
   );
 }
