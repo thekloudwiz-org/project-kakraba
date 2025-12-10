@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { APIGatewayProxyEvent } from 'aws-lambda';
+import { APIGatewayProxyEventV2 } from 'aws-lambda';
 
 // Create mock instances that we can control
 const mockRepository = {
@@ -33,6 +33,37 @@ jest.mock('../services/SignedUrlGenerator', () => ({
 // Import handler AFTER mocks are set up
 import { handler } from './index';
 
+// Helper to create APIGatewayProxyEventV2
+function createV2Event(body: string): APIGatewayProxyEventV2 {
+  return {
+    version: '2.0',
+    routeKey: 'POST /access/generate-link',
+    rawPath: '/access/generate-link',
+    rawQueryString: '',
+    headers: {},
+    requestContext: {
+      accountId: '123456789012',
+      apiId: 'api-id',
+      domainName: 'api.example.com',
+      domainPrefix: 'api',
+      http: {
+        method: 'POST',
+        path: '/access/generate-link',
+        protocol: 'HTTP/1.1',
+        sourceIp: '127.0.0.1',
+        userAgent: 'test-agent'
+      },
+      requestId: 'test-request-id',
+      routeKey: 'POST /access/generate-link',
+      stage: '$default',
+      time: '01/Jan/2024:00:00:00 +0000',
+      timeEpoch: 1704067200000
+    },
+    body,
+    isBase64Encoded: false
+  };
+}
+
 describe('Lambda Handler Tests', () => {
   
   beforeEach(() => {
@@ -41,89 +72,79 @@ describe('Lambda Handler Tests', () => {
 
   describe('Unit Tests - Edge Cases', () => {
     it('should return 400 when product_id is missing', async () => {
-      const event = {
-        body: JSON.stringify({
-          user_id: 'user-123',
-          intent: 'STREAM'
-        })
-      } as APIGatewayProxyEvent;
+      const event = createV2Event(JSON.stringify({
+        user_id: 'user-123',
+        intent: 'STREAM'
+      }));
 
       const result = await handler(event);
 
       expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body);
+      const body = JSON.parse(result.body as string);
       expect(body.error).toBe('InvalidRequest');
       expect(body.message).toContain('product_id');
     });
 
     it('should return 400 when user_id is missing', async () => {
-      const event = {
-        body: JSON.stringify({
-          product_id: 'prod-456',
-          intent: 'STREAM'
-        })
-      } as APIGatewayProxyEvent;
+      const event = createV2Event(JSON.stringify({
+        product_id: 'prod-456',
+        intent: 'STREAM'
+      }));
 
       const result = await handler(event);
 
       expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body);
+      const body = JSON.parse(result.body as string);
       expect(body.error).toBe('InvalidRequest');
       expect(body.message).toContain('user_id');
     });
 
     it('should return 400 when intent is missing', async () => {
-      const event = {
-        body: JSON.stringify({
-          product_id: 'prod-456',
-          user_id: 'user-123'
-        })
-      } as APIGatewayProxyEvent;
+      const event = createV2Event(JSON.stringify({
+        product_id: 'prod-456',
+        user_id: 'user-123'
+      }));
 
       const result = await handler(event);
 
       expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body);
+      const body = JSON.parse(result.body as string);
       expect(body.error).toBe('InvalidRequest');
       expect(body.message).toContain('intent');
     });
 
     it('should return 400 when intent is invalid', async () => {
-      const event = {
-        body: JSON.stringify({
-          product_id: 'prod-456',
-          user_id: 'user-123',
-          intent: 'INVALID'
-        })
-      } as APIGatewayProxyEvent;
+      const event = createV2Event(JSON.stringify({
+        product_id: 'prod-456',
+        user_id: 'user-123',
+        intent: 'INVALID'
+      }));
 
       const result = await handler(event);
 
       expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body);
+      const body = JSON.parse(result.body as string);
       expect(body.error).toBe('InvalidRequest');
       expect(body.message).toContain('STREAM or DOWNLOAD');
     });
 
     it('should return 400 when body is malformed JSON', async () => {
-      const event = {
-        body: 'not valid json {'
-      } as APIGatewayProxyEvent;
+      const event = createV2Event('not valid json {');
 
       const result = await handler(event);
 
       expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body);
+      const body = JSON.parse(result.body as string);
       expect(body.error).toBe('InvalidRequest');
     });
 
     it('should return 400 when body is missing', async () => {
-      const event = {} as APIGatewayProxyEvent;
+      const event = createV2Event('');
 
       const result = await handler(event);
 
       expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body);
+      const body = JSON.parse(result.body as string);
       expect(body.error).toBe('InvalidRequest');
     });
 
@@ -133,18 +154,16 @@ describe('Lambda Handler Tests', () => {
         errorMessage: 'No access rights found'
       });
 
-      const event = {
-        body: JSON.stringify({
-          product_id: 'prod-123',
-          user_id: 'user-456',
-          intent: 'STREAM'
-        })
-      } as APIGatewayProxyEvent;
+      const event = createV2Event(JSON.stringify({
+        product_id: 'prod-123',
+        user_id: 'user-456',
+        intent: 'STREAM'
+      }));
 
       const result = await handler(event);
 
       expect(result.statusCode).toBe(403);
-      const body = JSON.parse(result.body);
+      const body = JSON.parse(result.body as string);
       expect(body.error).toBe('AccessDenied');
       expect(body.message).toBe('No access rights found');
     });
@@ -160,18 +179,16 @@ describe('Lambda Handler Tests', () => {
 
       mockRepository.decrementDownloads.mockRejectedValueOnce(new Error('Download limit reached'));
 
-      const event = {
-        body: JSON.stringify({
-          product_id: 'prod-123',
-          user_id: 'user-456',
-          intent: 'DOWNLOAD'
-        })
-      } as APIGatewayProxyEvent;
+      const event = createV2Event(JSON.stringify({
+        product_id: 'prod-123',
+        user_id: 'user-456',
+        intent: 'DOWNLOAD'
+      }));
 
       const result = await handler(event);
 
       expect(result.statusCode).toBe(403);
-      const body = JSON.parse(result.body);
+      const body = JSON.parse(result.body as string);
       expect(body.error).toBe('DownloadLimitReached');
       expect(body.message).toBe('Download limit reached');
     });
@@ -182,18 +199,16 @@ describe('Lambda Handler Tests', () => {
         errorMessage: 'Subscription does not allow downloads'
       });
 
-      const event = {
-        body: JSON.stringify({
-          product_id: 'prod-123',
-          user_id: 'user-456',
-          intent: 'DOWNLOAD'
-        })
-      } as APIGatewayProxyEvent;
+      const event = createV2Event(JSON.stringify({
+        product_id: 'prod-123',
+        user_id: 'user-456',
+        intent: 'DOWNLOAD'
+      }));
 
       const result = await handler(event);
 
       expect(result.statusCode).toBe(403);
-      const body = JSON.parse(result.body);
+      const body = JSON.parse(result.body as string);
       expect(body.error).toBe('AccessDenied');
       expect(body.message).toBe('Subscription does not allow downloads');
     });
@@ -204,18 +219,16 @@ describe('Lambda Handler Tests', () => {
         errorMessage: 'This content type requires purchase'
       });
 
-      const event = {
-        body: JSON.stringify({
-          product_id: 'prod-123',
-          user_id: 'user-456',
-          intent: 'STREAM'
-        })
-      } as APIGatewayProxyEvent;
+      const event = createV2Event(JSON.stringify({
+        product_id: 'prod-123',
+        user_id: 'user-456',
+        intent: 'STREAM'
+      }));
 
       const result = await handler(event);
 
       expect(result.statusCode).toBe(403);
-      const body = JSON.parse(result.body);
+      const body = JSON.parse(result.body as string);
       expect(body.error).toBe('AccessDenied');
       expect(body.message).toBe('This content type requires purchase');
     });
@@ -232,13 +245,11 @@ describe('Lambda Handler Tests', () => {
             intent: fc.constantFrom('STREAM' as const, 'DOWNLOAD' as const)
           }),
           async ({ productId, userId, intent }) => {
-            const event = {
-              body: JSON.stringify({
-                product_id: productId,
-                user_id: userId,
-                intent: intent
-              })
-            } as APIGatewayProxyEvent;
+            const event = createV2Event(JSON.stringify({
+              product_id: productId,
+              user_id: userId,
+              intent: intent
+            }));
 
             // The handler will fail at validation since we're not mocking services
             // But it should successfully parse the request (not return 400 for parsing)
@@ -246,7 +257,7 @@ describe('Lambda Handler Tests', () => {
 
             // Property: Should not fail with parsing error (400 with "Missing required parameter")
             if (result.statusCode === 400) {
-              const body = JSON.parse(result.body);
+              const body = JSON.parse(result.body as string);
               expect(body.message).not.toContain('Missing required parameter');
               expect(body.message).not.toContain('Invalid intent');
             }
@@ -272,9 +283,7 @@ describe('Lambda Handler Tests', () => {
             
             delete body[missingField];
 
-            const event = {
-              body: JSON.stringify(body)
-            } as APIGatewayProxyEvent;
+            const event = createV2Event(JSON.stringify(body));
 
             const result = await handler(event);
 
@@ -283,7 +292,7 @@ describe('Lambda Handler Tests', () => {
             expect(result.headers).toHaveProperty('Content-Type');
             expect(result.headers?.['Content-Type']).toBe('application/json');
             
-            const responseBody = JSON.parse(result.body);
+            const responseBody = JSON.parse(result.body as string);
             expect(responseBody).toHaveProperty('error');
             expect(responseBody).toHaveProperty('message');
             expect(typeof responseBody.error).toBe('string');
@@ -330,13 +339,11 @@ describe('Lambda Handler Tests', () => {
               validateAccess: jest.fn().mockRejectedValue(mockError)
             }));
 
-            const event = {
-              body: JSON.stringify({
-                product_id: productId,
-                user_id: userId,
-                intent: intent
-              })
-            } as APIGatewayProxyEvent;
+            const event = createV2Event(JSON.stringify({
+              product_id: productId,
+              user_id: userId,
+              intent: intent
+            }));
 
             const result = await handler(event);
 
@@ -345,7 +352,7 @@ describe('Lambda Handler Tests', () => {
             expect(result.headers).toHaveProperty('Content-Type');
             expect(result.headers?.['Content-Type']).toBe('application/json');
             
-            const responseBody = JSON.parse(result.body);
+            const responseBody = JSON.parse(result.body as string);
             expect(responseBody).toHaveProperty('error');
             expect(responseBody).toHaveProperty('message');
             
