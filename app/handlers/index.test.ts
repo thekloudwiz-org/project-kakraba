@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { APIGatewayProxyEventV2 } from 'aws-lambda';
+import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 
 // Create mock instances that we can control
 const mockRepository = {
