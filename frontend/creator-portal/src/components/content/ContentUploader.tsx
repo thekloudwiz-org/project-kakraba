@@ -198,7 +198,7 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
     reset({ title: titleFromFilename, description: '' });
   }, [reset]);
 
-  const onDropRejected = useCallback((fileRejections: any[]) => {
+  const onDropRejected = useCallback((fileRejections: Array<{ file: File; errors: Array<{ code: string; message: string }> }>) => {
     if (fileRejections.length === 0) return;
 
     const rejection = fileRejections[0];
