@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useDropzone, FileRejection } from 'react-dropzone';
 import { api, Spinner, Input, Button, Toast } from '@kakraba/shared';
 import { useForm } from 'react-hook-form';
 
@@ -198,7 +198,7 @@ export default function ContentUploader({ onUploadComplete }: ContentUploaderPro
     reset({ title: titleFromFilename, description: '' });
   }, [reset]);
 
-  const onDropRejected = useCallback((fileRejections: Array<{ file: File; errors: Array<{ code: string; message: string }> }>) => {
+  const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
     if (fileRejections.length === 0) return;
 
     const rejection = fileRejections[0];

@@ -117,7 +117,6 @@ export default function RegisterForm() {
             </label>
             <Input
               id="password"
-              name="password"
               type="password"
               {...register('password')}
               placeholder="••••••••"
