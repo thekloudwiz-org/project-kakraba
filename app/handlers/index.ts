@@ -58,7 +58,7 @@ export const handler = async (
     // Unknown route
     return errorResponse(404, 'NotFound', 'Endpoint not found');
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error processing request:', error);
     return errorResponse(500, 'InternalServerError', 'An error occurred processing your request');
   }
@@ -90,8 +90,8 @@ async function handleAccessControl(
     if (request.intent === Intent.DOWNLOAD && validationResult.accessType === 'PURCHASE') {
       try {
         await repository.decrementDownloads(request.user_id, request.product_id);
-      } catch (error: any) {
-        if (error.message === 'Download limit reached') {
+      } catch (error) {
+        if (error instanceof Error && error.message === 'Download limit reached') {
           return errorResponse(403, 'DownloadLimitReached', 'Download limit reached');
         }
         throw error;
@@ -122,13 +122,14 @@ async function handleAccessControl(
 
     return successResponse(response);
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error in access control handler:', error);
 
     // Check if it's a validation error (400)
-    if (error.message?.includes('Missing required parameter') ||
-        error.message?.includes('Invalid intent') ||
-        error.message?.includes('Invalid JSON')) {
+    if (error instanceof Error && 
+        (error.message?.includes('Missing required parameter') ||
+         error.message?.includes('Invalid intent') ||
+         error.message?.includes('Invalid JSON'))) {
       return errorResponse(400, 'InvalidRequest', error.message);
     }
 
@@ -144,7 +145,7 @@ function parseRequest(event: APIGatewayProxyEventV2): AccessRequest {
     throw new Error('Missing required parameter: body');
   }
 
-  let body: any;
+  let body: { product_id?: string; user_id?: string; intent?: string };
   try {
     body = JSON.parse(event.body);
   } catch (error) {

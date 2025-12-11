@@ -57,9 +57,10 @@ export class ContentHandler {
       }
 
       return this.errorResponse(404, 'NotFound', 'Endpoint not found');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error in content handler:', error);
-      return this.errorResponse(500, 'InternalServerError', error.message || 'Internal server error');
+      const message = error instanceof Error ? error.message : 'Internal server error';
+      return this.errorResponse(500, 'InternalServerError', message);
     }
   }
 
@@ -165,7 +166,7 @@ export class ContentHandler {
     }
 
     const body = JSON.parse(event.body || '{}');
-    const updates: any = {};
+    const updates: Partial<{ title: string; description: string; thumbnailUrl: string }> = {};
 
     if (body.title !== undefined) updates.title = body.title;
     if (body.description !== undefined) updates.description = body.description;
@@ -198,7 +199,7 @@ export class ContentHandler {
   /**
    * Build success response
    */
-  private successResponse(data: any, statusCode = 200): APIGatewayProxyResultV2 {
+  private successResponse(data: unknown, statusCode = 200): APIGatewayProxyResultV2 {
     return {
       statusCode,
       headers: {

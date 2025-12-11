@@ -24,7 +24,7 @@ export class DynamoDBRepository {
    * Remove DynamoDB-specific fields from items
    * Strips PK, SK, and GSI keys to return clean domain objects
    */
-  private cleanDynamoDBItem<T>(item: any): T | null {
+  private cleanDynamoDBItem<T>(item: Record<string, unknown> | undefined): T | null {
     if (!item) return null;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { PK, SK, GSI1PK, GSI1SK, ...cleanItem } = item;
@@ -139,8 +139,8 @@ export class DynamoDBRepository {
       );
 
       return response.Attributes?.downloads_remaining ?? 0;
-    } catch (error: any) {
-      if (error.name === 'ConditionalCheckFailedException') {
+    } catch (error) {
+      if (error instanceof Error && error.name === 'ConditionalCheckFailedException') {
         throw new Error('Download limit reached');
       }
       console.error('Error decrementing downloads:', error);
@@ -207,7 +207,13 @@ export class DynamoDBRepository {
     options?: { limit?: number; contentType?: string }
   ): Promise<{ items: ContentMetadata[] }> {
     try {
-      const params: any = {
+      const params: {
+        TableName: string;
+        KeyConditionExpression: string;
+        ExpressionAttributeValues: Record<string, string>;
+        ScanIndexForward: boolean;
+        FilterExpression?: string;
+      } = {
         TableName: this.tableName,
         KeyConditionExpression: 'PK = :userPK AND begins_with(SK, :contentPrefix)',
         ExpressionAttributeValues: {
@@ -243,7 +249,7 @@ export class DynamoDBRepository {
   ): Promise<ContentMetadata> {
     try {
       const updateExpressions: string[] = [];
-      const expressionAttributeValues: Record<string, any> = {};
+      const expressionAttributeValues: Record<string, unknown> = {};
       const expressionAttributeNames: Record<string, string> = {};
 
       if (updates.title !== undefined) {

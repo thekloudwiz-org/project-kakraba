@@ -15,7 +15,8 @@ export class ProductHandler {
 
     try {
       // Extract user ID from Cognito authorizer (JWT claims in V2 format)
-      const userId = (event.requestContext as any).authorizer?.jwt?.claims?.sub as string;
+      // @ts-expect-error - AWS Lambda types don't properly type the JWT authorizer
+      const userId = event.requestContext.authorizer?.jwt?.claims?.sub as string;
       
       if (!userId) {
         return this.errorResponse(401, 'Unauthorized', 'User not authenticated');
@@ -50,9 +51,10 @@ export class ProductHandler {
       }
 
       return this.errorResponse(404, 'NotFound', 'Endpoint not found');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error in product handler:', error);
-      return this.errorResponse(500, 'InternalServerError', error.message);
+      const message = error instanceof Error ? error.message : 'Internal server error';
+      return this.errorResponse(500, 'InternalServerError', message);
     }
   }
 
@@ -127,8 +129,8 @@ export class ProductHandler {
     const now = new Date().toISOString();
 
     const updateExpression: string[] = [];
-    const expressionAttributeValues: any = {};
-    const expressionAttributeNames: any = {};
+    const expressionAttributeValues: Record<string, unknown> = {};
+    const expressionAttributeNames: Record<string, string> = {};
 
     if (body.title !== undefined) {
       updateExpression.push('#title = :title');
@@ -180,7 +182,7 @@ export class ProductHandler {
     return this.successResponse({ message: 'Product deleted successfully' });
   }
 
-  private successResponse(data: any): APIGatewayProxyResultV2 {
+  private successResponse(data: unknown): APIGatewayProxyResultV2 {
     return {
       statusCode: 200,
       headers: {
