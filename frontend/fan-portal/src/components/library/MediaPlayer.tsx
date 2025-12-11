@@ -111,7 +111,7 @@ export default function MediaPlayer({ contentId, contentType, title, onClose }: 
               >
                 Your browser does not support the video tag.
               </video>
-              <CustomMediaControls mediaRef={videoRef} type="video" />
+              <CustomMediaControls mediaRef={videoRef} />
             </div>
           ) : contentType === 'AUDIO' ? (
             <div className="bg-gray-100 rounded-lg p-8 space-y-4">
@@ -141,7 +141,7 @@ export default function MediaPlayer({ contentId, contentType, title, onClose }: 
               >
                 Your browser does not support the audio tag.
               </audio>
-              <CustomMediaControls mediaRef={audioRef} type="audio" />
+              <CustomMediaControls mediaRef={audioRef} />
             </div>
           ) : (
             <div className="text-center py-12 text-gray-600">

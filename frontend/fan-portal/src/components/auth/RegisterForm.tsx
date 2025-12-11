@@ -56,7 +56,6 @@ export default function RegisterForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <Input
-          name="email"
           {...register('email')}
           type="email"
           placeholder="Email"
@@ -74,7 +73,6 @@ export default function RegisterForm() {
 
       <div>
         <Input
-          name="password"
           {...register('password')}
           type="password"
           placeholder="Password"
@@ -84,7 +82,6 @@ export default function RegisterForm() {
 
       <div>
         <Input
-          name="confirmPassword"
           {...register('confirmPassword')}
           type="password"
           placeholder="Confirm Password"
