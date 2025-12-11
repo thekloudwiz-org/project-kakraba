@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { api } from '@kakraba/shared';
 import Header from '../components/layout/Header';
 
 interface Product {
@@ -62,7 +61,7 @@ export default function DiscoveryPage() {
     setFilters({ ...filters, search: searchQuery, page: 1 });
   };
 
-  const handleFilterChange = (key: keyof SearchFilters, value: any) => {
+  const handleFilterChange = (key: keyof SearchFilters, value: string | number | undefined) => {
     setFilters({ ...filters, [key]: value, page: 1 });
   };
 

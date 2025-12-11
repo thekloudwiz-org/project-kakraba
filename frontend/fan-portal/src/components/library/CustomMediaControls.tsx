@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 interface CustomMediaControlsProps {
   mediaRef: React.RefObject<HTMLVideoElement | HTMLAudioElement>;
-  type: 'audio' | 'video';
 }
 
-export default function CustomMediaControls({ mediaRef, type }: CustomMediaControlsProps) {
+export default function CustomMediaControls({ mediaRef }: CustomMediaControlsProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
