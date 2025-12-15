@@ -4,7 +4,8 @@
 
 # S3 Bucket for Creator Portal
 resource "aws_s3_bucket" "creator_portal" {
-  bucket = "${var.project_name}-${var.environment}-creator-portal"
+  bucket        = "${var.project_name}-${var.environment}-creator-portal"
+  force_destroy = true
 
   tags = merge(
     var.tags,
@@ -161,7 +162,8 @@ resource "aws_route53_record" "creator_portal_ipv6" {
 
 # S3 Bucket for Fan Portal
 resource "aws_s3_bucket" "fan_portal" {
-  bucket = "${var.project_name}-${var.environment}-fan-portal"
+  bucket        = "${var.project_name}-${var.environment}-fan-portal"
+  force_destroy = true
 
   tags = merge(
     var.tags,
@@ -318,7 +320,8 @@ resource "aws_route53_record" "fan_portal_ipv6" {
 
 # S3 Bucket for Landing Page
 resource "aws_s3_bucket" "landing_page" {
-  bucket = "${var.project_name}-${var.environment}-landing-page"
+  bucket        = "${var.project_name}-${var.environment}-landing-page"
+  force_destroy = true
 
   tags = merge(
     var.tags,

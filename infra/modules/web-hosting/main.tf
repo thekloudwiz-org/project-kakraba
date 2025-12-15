@@ -1,6 +1,7 @@
 # S3 Bucket for static website hosting
 resource "aws_s3_bucket" "website" {
-  bucket = "${var.project_name}-${var.environment}-${var.site_name}"
+  bucket        = "${var.project_name}-${var.environment}-${var.site_name}"
+  force_destroy = true
 
   tags = merge(
     var.tags,

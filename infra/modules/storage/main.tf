@@ -1,6 +1,7 @@
 # S3 Bucket for creator content storage
 resource "aws_s3_bucket" "content" {
-  bucket = "${var.project_name}-${var.environment}-content"
+  bucket        = "${var.project_name}-${var.environment}-content"
+  force_destroy = true
 
   tags = merge(
     var.tags,
